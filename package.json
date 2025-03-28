@@ -4,10 +4,9 @@
 		"clean": "hardhat clean",
 		"test": "hardhat test",
 		"deploy": "hardhat run scripts/deploy.js",
-		"ignition:stake": "hardhat ignition deploy ignition/modules/stake.js",
-		"ignition:token": "hardhat ignition deploy ignition/modules/rcc.js",
+		"ignition:factory": "hardhat ignition deploy ignition/modules/dlr.factory.js",
 		"coverage": "hardhat coverage",
-		"flat": "hardhat flatten ./contracts/FLYStake.sol > ./cache/FLYStake_All.sol",
+		"flat": "hardhat flatten ./contracts/DlrFactory.sol > ./cache/DlrFactory.flat.sol",
 		"verify": "hardhat ignition verify chain-11155111",
 		"tx": "hardhat ignition transactions chain-11155111",
 		"id": "hardhat ignition deployments",
@@ -33,5 +32,8 @@
 		"hardhat-gas-reporter": "^1.0.8",
 		"solidity-coverage": "^0.8.0",
 		"typechain": "^8.3.0"
+	},
+	"dependencies": {
+		"@openzeppelin/contracts-upgradeable": "^5.2.0"
 	}
 }

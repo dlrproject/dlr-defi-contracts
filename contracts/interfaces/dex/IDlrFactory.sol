@@ -16,7 +16,7 @@ interface IDlrFactory {
 
     function createMatch(
         address tokenAddressA,
-        address tokenAddressA
+        address tokenAddressB
     ) external returns (address matchAddress);
 
     function setFeeAddress(address) external;

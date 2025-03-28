@@ -2,16 +2,17 @@
 
 pragma solidity ^0.8.22;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/dex/IDlrMatchBase.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract DlrMatchBase is IDlrMatchBase, ReentrancyGuard {
-    function name() external pure returns (string memory) {}
+contract DlrMatchBase is IDlrMatchBase, Ownable {
+    /* State declarations */
+    string public constant name = "DLR Match Token";
+    string public constant symbol = "DLR";
+    uint8 public constant decimals = 18;
 
-    function symbol() external pure returns (string memory) {}
-
-    function decimals() external pure returns (uint8) {}
+    constructor() Ownable(msg.sender) {}
 
     function totalSupply() external view returns (uint) {}
 
@@ -25,18 +26,24 @@ contract DlrMatchBase is IDlrMatchBase, ReentrancyGuard {
     function approve(
         address spender,
         uint value
-    ) external override returns (bool) {}
+    ) external override returns (bool) {
+        emit Approval(msg.sender, spender, value);
+        return true; // Indicate success
+    }
 
-    function transfer(
-        address to,
-        uint value
-    ) external override returns (bool) {}
+    function transfer(address to, uint value) external override returns (bool) {
+        emit Transfer(msg.sender, to, value);
+        return true; // Indicate success
+    }
 
     function transferFrom(
         address from,
         address to,
         uint value
-    ) external override returns (bool) {}
+    ) external override returns (bool) {
+        emit Transfer(from, to, value);
+        return true; // Indicate success
+    }
 
     function DOMAIN_SEPARATOR() external view returns (bytes32) {}
 
@@ -52,5 +59,14 @@ contract DlrMatchBase is IDlrMatchBase, ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override {}
+    ) external override {
+        // approval(owner, spender, value);
+        if (
+            s == bytes32(0) ||
+            r == bytes32(0) ||
+            v == 0 ||
+            deadline <= block.timestamp
+        ) {}
+        emit Approval(owner, spender, value);
+    }
 }

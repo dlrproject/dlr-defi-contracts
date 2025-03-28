@@ -1,19 +1,29 @@
 /*
 deploy
 */
-const { ethers, ignition, upgrades } = require("hardhat")
-const RccTokenModule = require("../ignition/modules/rcc");
-const RCCStakeModule = require("../ignition/modules/stake");
+const { ethers, ignition, upgrades } = require("hardhat");
+const DlrFactoryModule = require("../ignition/modules/dlr.factory");
 async function main() {
-    let tokenModule = await ignition.deploy(RccTokenModule);
-    let stakeModule = await ignition.deploy(RCCStakeModule);
-    console.log("tokenModule", tokenModule.token.target);
-    console.log("stakeModule", stakeModule.stake.target);
-    let stakeFactory = await ethers.getContractFactory("RCCStake");
+    const [owner, admin, user1, user2, ...addrs] = await ethers.getSigners();
+
+    let factoryModule = await ignition.deploy(DlrFactoryModule);
+    let factory = await ethers.getContractFactory("DlrFactory");
     let proxyFactory = await upgrades.deployProxy(
-        stakeFactory,
-        [tokenModule.token.target, 100, 100, 100],
+        factory,
+        [owner.address],
         { initializer: "initialize" }
     );
+
+
+    await proxyFactory.createMatch("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0");
+
     console.log("proxyAddress", proxyFactory.target);
 }
+
+main().then(() => {
+    console.log("Script finished successfully");
+    process.exit(0);
+}).catch((error) => {
+    console.error("Error in script:", error);
+    process.exit(1);
+});

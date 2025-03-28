@@ -6,7 +6,7 @@
 		"deploy": "hardhat run scripts/deploy.js",
 		"ignition:factory": "hardhat ignition deploy ignition/modules/dlr.factory.js",
 		"coverage": "hardhat coverage",
-		"flat": "hardhat flatten ./contracts/DlrFactory.sol > ./cache/DlrFactory.flat.sol",
+		"flat": "hardhat flatten ./contracts/DlrFactory.sol > ./cache/DlrFactory.sol",
 		"verify": "hardhat ignition verify chain-11155111",
 		"tx": "hardhat ignition transactions chain-11155111",
 		"id": "hardhat ignition deployments",

@@ -19,7 +19,7 @@ contract DlrMatch is IDlrMatch, DlrMatchBase, ReentrancyGuard {
         tokenAddressB = _tokenAddressB;
     }
 
-    /*Main functions */
+    /* Main functions */
     function mint(address _to) external nonReentrant returns (uint liquidity) {
         update();
         emit DlrMatchMint(msg.sender, 1, 2);
@@ -42,7 +42,7 @@ contract DlrMatch is IDlrMatch, DlrMatchBase, ReentrancyGuard {
         emit DlrMatchSwap(msg.sender, 111, 222, _amountAOut, _amountBOut, _to);
     }
 
-    /*Private functions */
+    /* Private functions */
     function update() private {
         emit DlrMatchSync(1111, 2222);
     }

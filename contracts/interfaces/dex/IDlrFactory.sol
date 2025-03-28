@@ -2,7 +2,7 @@
 pragma solidity ^0.8.22;
 
 interface IDlrFactory {
-    /*Type declarations*/
+    /* Type declarations */
     event DrlMatchCreated(
         address indexed _tokenAddressA,
         address indexed _tokenAddressB,
@@ -10,7 +10,7 @@ interface IDlrFactory {
         uint
     );
 
-    /*Main functions */
+    /* Main functions */
     function getMatch(
         address _tokenAddressA,
         address _tokenAddressB

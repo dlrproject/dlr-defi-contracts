@@ -7,7 +7,7 @@ import "./DlrMatch.sol";
 import "./interfaces/dex/IDlrFactory.sol";
 
 contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
-    /*State Variables*/
+    /* State Variables */
     address public feeAddress;
     address[] public tokenAddersses;
     mapping(address => mapping(address => address)) public matchAddresses;

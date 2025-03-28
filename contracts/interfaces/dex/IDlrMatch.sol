@@ -4,7 +4,7 @@ pragma solidity ^0.8.22;
 import "./IDlrMatchBase.sol";
 
 interface IDlrMatch is IDlrMatchBase {
-    /*Type declarations*/
+    /* Type declarations */
     event DlrMatchSwap(
         address indexed _sender,
         uint _amountAIn,
@@ -29,7 +29,7 @@ interface IDlrMatch is IDlrMatchBase {
         address _tokenAddressB
     ) external;
 
-    /*Main functions */
+    /* Main functions */
     function mint(address _to) external returns (uint liquidity);
 
     function burn(address _to) external returns (uint amountA, uint amountB);

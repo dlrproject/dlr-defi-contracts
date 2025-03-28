@@ -5,18 +5,14 @@ const { ethers, ignition, upgrades } = require("hardhat");
 const DlrFactoryModule = require("../ignition/modules/dlr.factory");
 async function main() {
     const [owner, admin, user1, user2, ...addrs] = await ethers.getSigners();
-
-    let factoryModule = await ignition.deploy(DlrFactoryModule);
+    await ignition.deploy(DlrFactoryModule);
     let factory = await ethers.getContractFactory("DlrFactory");
     let proxyFactory = await upgrades.deployProxy(
         factory,
         [owner.address],
         { initializer: "initialize" }
     );
-
-
-    await proxyFactory.createMatch("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0");
-
+    await proxyFactory.createMatch("0xF44259a609c777381145b0FbFa257EaC5023ADf9", "0xadB0264dE38aC757D2f98fdB5f3cCAb9a43e178f");
     console.log("proxyAddress", proxyFactory.target);
 }
 

@@ -29,7 +29,7 @@ contract DlrMatch is IDlrMatch, DlrMatchBase, ReentrancyGuard {
         address _to
     ) external nonReentrant returns (uint amountA, uint amountB) {
         update();
-        emit DlrMatchBurn(msg.sender, 11, 22, to);
+        emit DlrMatchBurn(msg.sender, 11, 22, _to);
     }
 
     function swap(

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.22;
 
 import "./DlrMatchBase.sol";
-import "./interfaces/dex/IDrlMatch.sol";
+import "./interfaces/dex/IDlrMatch.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract DlrMatch is IDrlMatch, DlrMatchBase, ReentrancyGuard {
+contract DlrMatch is IDlrMatch, DlrMatchBase, ReentrancyGuard {
     /* State declarations */
     address public s_tokenAddressA;
     address public s_tokenAddressB;

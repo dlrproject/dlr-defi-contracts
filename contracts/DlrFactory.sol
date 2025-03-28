@@ -45,7 +45,7 @@ contract DlrFactory is
         assembly {
             matchAddress := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        IDrlMatch(matchAddress).initialize(tokenAddressA, tokenAddressB);
+        IDlrMatch(matchAddress).initialize(tokenAddressA, tokenAddressB);
         emit DrlMatchCreated(
             tokenAddressA,
             tokenAddressB,

@@ -3,7 +3,7 @@ pragma solidity ^0.8.22;
 
 import "./IDlrMatchBase.sol";
 
-interface IDrlMatch is IDlrMatchBase {
+interface IDlrMatch is IDlrMatchBase {
     /*Type declarations*/
     event DlrMatchSwap(
         address indexed sender,

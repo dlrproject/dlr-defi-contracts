@@ -40,52 +40,15 @@
 
 ```
 scripts
-
-编译
-
 "compile": "hardhat compile",
-
- 缓存
-
 "clean": "hardhat clean",
-
-测试
-
 "test": "hardhat test",
-
-部署
-
 "deploy": "hardhat run scripts/deploy.js",
-
-基本合约部署
-
-"ignition:stake": "hardhat ignition deploy ignition/modules/stake.js",
-
-基本合约部署
-
-"ignition:token": "hardhat ignition deploy ignition/modules/rcc.js",
-
-完成度
-
+"ignition:factory": "hardhat ignition deploy ignition/modules/dlr.factory.js",
 "coverage": "hardhat coverage",
-
-生成单文件
-
-"flat": "hardhat flatten ./contracts/FLYStake.sol > ./cache/FLYStake_All.sol",
-
-验证
-
+"flat": "hardhat flatten ./contracts/DlrFactory.sol > ./cache/DlrFactory.flat.sol",
 "verify": "hardhat ignition verify chain-11155111",
-
-获取部署的交易 HASH
-
 "tx": "hardhat ignition transactions chain-11155111",
-
-获取部署 id
-
 "id": "hardhat ignition deployments",
-
-本地 evm
-
 "node": "hardhat node"
 ```

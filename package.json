@@ -1,0 +1,38 @@
+{
+	"scripts": {
+		"compile": "hardhat compile",
+		"clean": "hardhat clean",
+		"test": "hardhat test",
+		"deploy": "hardhat run scripts/deploy.js",
+		"ignition:stake": "hardhat ignition deploy ignition/modules/stake.js",
+		"ignition:token": "hardhat ignition deploy ignition/modules/rcc.js",
+		"coverage": "hardhat coverage",
+		"flat": "hardhat flatten ./contracts/FLYStake.sol > ./cache/FLYStake_All.sol",
+		"verify": "hardhat ignition verify chain-11155111",
+		"tx": "hardhat ignition transactions chain-11155111",
+		"id": "hardhat ignition deployments",
+		"node": "hardhat node"
+	},
+	"dependencies": {
+		"@openzeppelin/hardhat-upgrades": "^3.9.0",
+		"dotenv": "^16.4.7",
+		"hardhat": "^2.22.19"
+	},
+	"packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
+	"devDependencies": {
+		"@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+		"@nomicfoundation/hardhat-ethers": "^3.0.0",
+		"@nomicfoundation/hardhat-ignition": "^0.15.0",
+		"@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
+		"@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+		"@nomicfoundation/hardhat-toolbox": "^5.0.0",
+		"@nomicfoundation/hardhat-verify": "^2.0.0",
+		"@typechain/ethers-v6": "^0.5.0",
+		"@typechain/hardhat": "^9.0.0",
+		"chai": "^4.2.0",
+		"ethers": "^6.4.0",
+		"hardhat-gas-reporter": "^1.0.8",
+		"solidity-coverage": "^0.8.0",
+		"typechain": "^8.3.0"
+	}
+}

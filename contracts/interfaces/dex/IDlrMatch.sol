@@ -6,20 +6,20 @@ import "./IDlrMatchBase.sol";
 interface IDlrMatch is IDlrMatchBase {
     /*Type declarations*/
     event DlrMatchSwap(
-        address indexed sender,
-        uint amountAIn,
-        uint amountBIn,
-        uint amountAOut,
-        uint amountBOut,
-        address indexed to
+        address indexed _sender,
+        uint _amountAIn,
+        uint _amountBIn,
+        uint _amountAOut,
+        uint _amountBOut,
+        address indexed _to
     );
 
-    event DlrMatchMint(address indexed sender, uint amountA, uint amountB);
+    event DlrMatchMint(address indexed _sender, uint _amountA, uint _amountB);
     event DlrMatchBurn(
-        address indexed sender,
-        uint amountA,
-        uint amountB,
-        address indexed to
+        address indexed _sender,
+        uint _amountA,
+        uint _amountB,
+        address indexed _to
     );
     event DlrMatchSync(uint112 reserveA, uint112 reserveB);
 
@@ -29,15 +29,15 @@ interface IDlrMatch is IDlrMatchBase {
         address _tokenAddressB
     ) external;
 
-    /*External functions */
-    function mint(address to) external returns (uint liquidity);
+    /*Main functions */
+    function mint(address _to) external returns (uint liquidity);
 
-    function burn(address to) external returns (uint amountA, uint amountB);
+    function burn(address _to) external returns (uint amountA, uint amountB);
 
     function swap(
-        uint amountAOut,
-        uint amountBOut,
-        address to,
-        bytes calldata data
+        uint _amountAOut,
+        uint _amountBOut,
+        address _to,
+        bytes calldata _data
     ) external;
 }

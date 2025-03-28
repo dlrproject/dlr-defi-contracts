@@ -7,39 +7,39 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract DlrMatch is IDlrMatch, DlrMatchBase, ReentrancyGuard {
     /* State declarations */
-    address public s_tokenAddressA;
-    address public s_tokenAddressB;
+    address public tokenAddressA;
+    address public tokenAddressB;
 
     /* Initialize function */
     function initialize(
         address _tokenAddressA,
         address _tokenAddressB
     ) external {
-        s_tokenAddressA = _tokenAddressA;
-        s_tokenAddressB = _tokenAddressB;
+        tokenAddressA = _tokenAddressA;
+        tokenAddressB = _tokenAddressB;
     }
 
-    /*External functions */
-    function mint(address to) external nonReentrant returns (uint liquidity) {
+    /*Main functions */
+    function mint(address _to) external nonReentrant returns (uint liquidity) {
         update();
         emit DlrMatchMint(msg.sender, 1, 2);
     }
 
     function burn(
-        address to
+        address _to
     ) external nonReentrant returns (uint amountA, uint amountB) {
         update();
         emit DlrMatchBurn(msg.sender, 11, 22, to);
     }
 
     function swap(
-        uint amountAOut,
-        uint amountBOut,
-        address to,
-        bytes calldata data
+        uint _amountAOut,
+        uint _amountBOut,
+        address _to,
+        bytes calldata _data
     ) external nonReentrant {
         update();
-        emit DlrMatchSwap(msg.sender, 111, 222, amountAOut, amountBOut, to);
+        emit DlrMatchSwap(msg.sender, 111, 222, _amountAOut, _amountBOut, _to);
     }
 
     /*Private functions */

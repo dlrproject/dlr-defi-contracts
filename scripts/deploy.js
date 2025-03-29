@@ -1,6 +1,4 @@
-/*
-deploy
-*/
+/*deploy*/
 const { ethers, ignition, upgrades } = require("hardhat");
 const DlrFactoryModule = require("../ignition/modules/dlr.factory");
 async function main() {
@@ -12,7 +10,10 @@ async function main() {
         [owner.address],
         { initializer: "initialize" }
     );
-    await proxyFactory.createMatch("0xF44259a609c777381145b0FbFa257EaC5023ADf9", "0xadB0264dE38aC757D2f98fdB5f3cCAb9a43e178f");
+    await proxyFactory.createMatch(
+        "0xF44259a609c777381145b0FbFa257EaC5023ADf9",
+        "0xadB0264dE38aC757D2f98fdB5f3cCAb9a43e178f"
+    );
     console.log("proxyAddress", proxyFactory.target);
 }
 

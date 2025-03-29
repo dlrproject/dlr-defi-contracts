@@ -6,10 +6,14 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "./DlrMatch.sol";
 import "./interfaces/dex/IDlrFactory.sol";
 
+error DlrFactory_TokenAddressSame();
+error DlrFactory_TokenAddressZero();
+error DlrFactory_MatchAlreadyExists();
+
 contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
     /* State Variables */
     address public feeAddress;
-    address[] public tokenAddersses;
+    address[] public contractAddersses;
     mapping(address => mapping(address => address)) public matchAddresses;
 
     /* Initialize function */
@@ -27,28 +31,43 @@ contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
     }
 
     /* Main functions */
-    function getMatch(
-        address _tokenAddressA,
-        address _tokenAddressB
-    ) external view returns (address matchAddress) {
-        matchAddress = matchAddresses[_tokenAddressA][_tokenAddressB];
-    }
-
     function createMatch(
         address _tokenAddressA,
         address _tokenAddressB
     ) external returns (address matchAddress) {
+        /* Checks */
+        if (_tokenAddressA == _tokenAddressB) {
+            revert DlrFactory_TokenAddressSame();
+        }
+        if (matchAddresses[_tokenAddressA][_tokenAddressB] != address(0)) {
+            revert DlrFactory_MatchAlreadyExists();
+        }
+        (_tokenAddressA, _tokenAddressB) = _tokenAddressA < _tokenAddressB
+            ? (_tokenAddressA, _tokenAddressB)
+            : (_tokenAddressB, _tokenAddressA);
+        if (_tokenAddressA == address(0)) {
+            revert DlrFactory_TokenAddressZero();
+        }
+
+        /* Effects */
         bytes32 salt = keccak256(
             abi.encodePacked(_tokenAddressA, _tokenAddressB)
         );
         bytes memory bytecode = type(DlrMatch).creationCode;
+
         assembly {
             matchAddress := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        IDlrMatch(matchAddress).initialize(_tokenAddressA, _tokenAddressA);
+        matchAddresses[_tokenAddressA][_tokenAddressB] = matchAddress;
+        matchAddresses[_tokenAddressB][_tokenAddressA] = matchAddress;
+        contractAddersses.push(matchAddress);
+
+        /* Interactions */
+        IDlrMatch(matchAddress).initialize(_tokenAddressA, _tokenAddressB);
+
         emit DrlMatchCreated(
             _tokenAddressA,
-            _tokenAddressA,
+            _tokenAddressB,
             matchAddress,
             block.timestamp
         );

@@ -11,11 +11,6 @@ interface IDlrFactory {
     );
 
     /* Main functions */
-    function getMatch(
-        address _tokenAddressA,
-        address _tokenAddressB
-    ) external view returns (address matchAddress);
-
     function createMatch(
         address _tokenAddressA,
         address _tokenAddressB

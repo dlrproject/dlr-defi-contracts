@@ -7,7 +7,7 @@ import "./DlrMatch.sol";
 import "./interfaces/dex/IDlrFactory.sol";
 
 error DlrFactory_TokenAddressSame();
-error DlrFactory_TokenAddressZero();
+error DlrFactory_AddressZero();
 error DlrFactory_MatchAlreadyExists();
 
 contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
@@ -46,7 +46,7 @@ contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
             ? (_tokenAddressA, _tokenAddressB)
             : (_tokenAddressB, _tokenAddressA);
         if (_tokenAddressA == address(0)) {
-            revert DlrFactory_TokenAddressZero();
+            revert DlrFactory_AddressZero();
         }
 
         /* Effects */
@@ -74,7 +74,10 @@ contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
     }
 
     /* Getter Setter */
-    function setFeeAddress(address _feeAddress) external {
+    function setFeeAddress(address _feeAddress) external onlyOwner {
+        if (_feeAddress == address(0)) {
+            revert DlrFactory_AddressZero();
+        }
         feeAddress = _feeAddress;
     }
 

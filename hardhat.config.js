@@ -27,7 +27,7 @@ module.exports = {
     sepolia: {
       url: SEPOLIA_RPC_URL,
       accounts: [PRIVATE_KEY],
-      chainId: 11155111, // Sepolia
+      chainId: 11155111, // Sepolia 
     },
     localhost: {
       url: "http://127.0.0.1:8545/",

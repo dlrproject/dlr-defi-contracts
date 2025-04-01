@@ -2,7 +2,6 @@ const { assert, expect } = require("chai");
 const { ethers, network, ignition, upgrades } = require("hardhat");
 const { developmentChains } = require("../../config");
 const DlrFactoryModule = require("../../ignition/modules/dlr.factory");
-const dlrFactory = require("../../ignition/modules/dlr.factory");
 
 !developmentChains.includes(network.name)
     ? describe.skip
@@ -35,7 +34,7 @@ const dlrFactory = require("../../ignition/modules/dlr.factory");
                     await expect(proxyDrlFactory.connect(admin).createMatch(
                         tokenAddresssA,
                         adddressZero,
-                    )).to.be.revertedWithCustomError(proxyDrlFactory, "DlrFactory_AddressZero");
+                    )).to.be.revertedWithCustomError(proxyDrlFactory, "Dlr_AddressZero");
                 });
                 it("DlrFactory can't be exists address ", async function () {
                     await proxyDrlFactory.connect(admin).createMatch(
@@ -76,13 +75,15 @@ const dlrFactory = require("../../ignition/modules/dlr.factory");
                     const event = receipt.logs.find(log =>
                         log.topics[0] === eventFragment.topicHash
                     );
+
                     assert.exists(event, "DrlMatchCreated event should be emitted");
                     const decodedEvent = proxyDrlFactory.interface.decodeEventLog(
                         eventFragment,
                         event.data,
                         event.topics
                     );
-                    const matchAddress = decodedEvent._mapAddress;
+                    const matchAddress = decodedEvent._matchAddress;
+
                     assert.notEqual(matchAddress, ethers.ZeroAddress, "Invalid contract address");
                     const code = await ethers.provider.getCode(matchAddress);
                     assert.notEqual(code, "0x", "Contract code should be deployed");
@@ -100,7 +101,7 @@ const dlrFactory = require("../../ignition/modules/dlr.factory");
                 });
                 it("DlrFactory Fee address can't  set address zero", async function () {
                     await expect(proxyDrlFactory.connect(owner).setFeeAddress(adddressZero))
-                        .to.be.revertedWithCustomError(proxyDrlFactory, "DlrFactory_AddressZero");
+                        .to.be.revertedWithCustomError(proxyDrlFactory, "Dlr_AddressZero");
                 });
             });
             describe("DlrFactory can get Fee Address ", function () {
@@ -173,7 +174,7 @@ const dlrFactory = require("../../ignition/modules/dlr.factory");
                     event.data,
                     event.topics
                 );
-                matchAddress = decodedEvent._mapAddress;
+                matchAddress = decodedEvent._matchAddress;
             });
             it("DlrMatch is inintialized", async function () {
                 const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);

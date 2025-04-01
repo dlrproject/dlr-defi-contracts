@@ -6,8 +6,8 @@ interface IDlrFactory {
     event DrlMatchCreated(
         address indexed _tokenAddressA,
         address indexed _tokenAddressB,
-        address _mapAddress,
-        uint
+        address _matchAddress,
+        uint _timestamp
     );
 
     /* Main functions */
@@ -20,4 +20,6 @@ interface IDlrFactory {
     function getFeeAddress() external view returns (address);
 
     function setFeeAddress(address) external;
+
+    function getMatchHash() external view returns (bytes32);
 }

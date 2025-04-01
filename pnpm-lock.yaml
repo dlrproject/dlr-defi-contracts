@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@openzeppelin/contracts-upgradeable':
-        specifier: ^5.2.0
-        version: 5.2.0(@openzeppelin/contracts@5.2.0)
     devDependencies:
       '@nomicfoundation/hardhat-chai-matchers':
         specifier: ^2.0.0
@@ -36,6 +32,9 @@ importers:
       '@openzeppelin/contracts':
         specifier: ^5.2.0
         version: 5.2.0
+      '@openzeppelin/contracts-upgradeable':
+        specifier: ^5.2.0
+        version: 5.2.0(@openzeppelin/contracts@5.2.0)
       '@openzeppelin/hardhat-upgrades':
         specifier: ^3.9.0
         version: 3.9.0(@nomicfoundation/hardhat-ethers@3.0.8(ethers@6.13.5)(hardhat@2.22.19(ts-node@10.9.2(@types/node@22.13.14)(typescript@5.8.2))(typescript@5.8.2)))(@nomicfoundation/hardhat-verify@2.0.13(hardhat@2.22.19(ts-node@10.9.2(@types/node@22.13.14)(typescript@5.8.2))(typescript@5.8.2)))(ethers@6.13.5)(hardhat@2.22.19(ts-node@10.9.2(@types/node@22.13.14)(typescript@5.8.2))(typescript@5.8.2))

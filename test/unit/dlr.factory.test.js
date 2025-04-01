@@ -3,7 +3,7 @@ const { ethers, network, ignition, upgrades } = require("hardhat");
 const { developmentChains } = require("../../config");
 const DlrFactoryModule = require("../../ignition/modules/dlr.factory");
 const dlrFactory = require("../../ignition/modules/dlr.factory");
- 
+
 !developmentChains.includes(network.name)
     ? describe.skip
     : describe("Dlr Dex Tests", function () {
@@ -203,17 +203,3 @@ const dlrFactory = require("../../ignition/modules/dlr.factory");
     });
 
 
-/*
-
- const returnData = await ethers.provider.call({
-                to: proxyDrlFactory.target,
-                data: proxyDrlFactory.interface.encodeFunctionData("createMatch", [
-                    tokenAddresssA,
-                    tokenAddresssB,
-                ]),
-            });
-            const [decoded] = ethers.AbiCoder.defaultAbiCoder().decode(
-                ["address"],
-                returnData
-            );
-*/

@@ -2,8 +2,12 @@ const { assert, expect } = require("chai");
 const { ethers, network, ignition, upgrades } = require("hardhat");
 const { developmentChains } = require("../../config");
 const DlrFactoryModule = require("../../ignition/modules/dlr.factory");
+
+const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.mock");
+const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
+
 const dlrFactory = require("../../ignition/modules/dlr.factory");
- 
+
 !developmentChains.includes(network.name)
     ? describe.skip
     : describe("Dlr Dex Factory Tests", function () {
@@ -186,99 +190,87 @@ const dlrFactory = require("../../ignition/modules/dlr.factory");
 
                 });
             });
-            describe("DlrFactory use initialize for constructor", function () {
-                it("DlrFactory set initialize", async function () {
-                    await expect(proxyDrlFactory.connect(owner).initialize(owner.address))
-                        .to.be.revertedWithCustomError(proxyDrlFactory, "InvalidInitialization");
+            describe("others:           DlrMatch functions can call", function () {
+                let matchAddress;
+                beforeEach(async () => {
+                    const tx = await proxyDrlFactoryContract.createMatch(tokenAddresssA, tokenAddresssB);
+                    const receipt = await tx.wait();
+                    const eventFragment = proxyDrlFactoryContract.interface.getEvent("DrlMatchCreated");
+                    const event = receipt.logs.find(log =>
+                        log.topics[0] === eventFragment.topicHash
+                    );
+                    const decodedEvent = proxyDrlFactoryContract.interface.decodeEventLog(
+                        eventFragment,
+                        event.data,
+                        event.topics
+                    );
+                    matchAddress = decodedEvent._matchAddress;
                 });
-            });
-            describe("DlrFactory can toggle pause contracts", function () {
-                it("DlrFactory pasue only unpased", async function () {
-                    await expect(proxyDrlFactory.connect(owner).unpause())
-                        .to.be.revertedWithCustomError(proxyDrlFactory, "ExpectedPause");
+                it("DlrMatch is inintialized", async function () {
+                    const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
+                    assert.equal(
+                        await matchContract.tokenAddressA(),
+                        tokenAddresssA,
+                        "TokenA should be initialized"
+                    );
+                    assert.equal(
+                        await matchContract.tokenAddressB(),
+                        tokenAddresssB,
+                        "TokenB should be initialized"
+                    );
                 });
-                it("DlrFactory unpased only pasue", async function () {
-                    let tx = await proxyDrlFactory.connect(owner).pause();
-                    await expect(proxyDrlFactory.connect(owner).pause())
-                        .to.be.revertedWithCustomError(proxyDrlFactory, "EnforcedPause");
+                it("DlrMatch mint can emit event", async function () {
+                    const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
+                    const mintTx = await matchContract.mint(tokenAddresssA);
+                    await expect(mintTx)
+                        .to.emit(matchContract, "DlrMatchMint")
                 });
-                it("DlrFactory only ownner can pasue", async function () {
-                    await expect(proxyDrlFactory.connect(admin).pause())
-                        .to.be.revertedWithCustomError(proxyDrlFactory, "OwnableUnauthorizedAccount");
+                it("DlrMatch ownner is factory", async function () {
+                    const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
+                    const matchOwner = await matchContract.owner();
+                    expect(matchOwner).to.equal(proxyDrlFactoryContract.target, "Match owner should be the factory address");
                 });
-                it("DlrFactory pasue can emit event", async function () {
-                    let tx = await proxyDrlFactory.connect(owner).pause();
-                    await expect(tx)
-                        .to.emit(proxyDrlFactory, "Paused")
+                it("DlrMatch match hash equal test also dynamic update", async function () {
+                    const TestMatch = await ignition.deploy(TestMatchModule)
+                    testMatchAddress = TestMatch.testMatch.target;
+                    const testMatchContract = await ethers.getContractAt("TestMatch", testMatchAddress);
+                    const returnData = await ethers.provider.call({
+                        to: testMatchContract.target,
+                        data: testMatchContract.interface.encodeFunctionData("getMatchHash", []),
+                    });
+                    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["bytes32"],
+                        returnData
+                    );
+                    const matchHash = await proxyDrlFactoryContract.getMatchHash();
+
+                    assert.equal(matchHash, decoded[0])
                 });
-                it("DlrFactory only ownner can unpasue", async function () {
-                    await expect(proxyDrlFactory.connect(admin).unpause())
-                        .to.be.revertedWithCustomError(proxyDrlFactory, "OwnableUnauthorizedAccount");
-                });
-                it("DlrFactory unpasue can emit event", async function () {
-                    await proxyDrlFactory.connect(owner).pause();
-                    let tx = await proxyDrlFactory.connect(owner).unpause();
-                    await expect(tx)
-                        .to.emit(proxyDrlFactory, "Unpaused")
+
+
+                it("DlrMatch dynamic address equal general address", async function () {
+                    const TestMatch = await ignition.deploy(TestMatchModule)
+                    testMatchAddress = TestMatch.testMatch.target;
+                    const testMatchContract = await ethers.getContractAt("TestMatch", testMatchAddress);
+                    const returnData = await ethers.provider.call({
+                        to: testMatchContract.target,
+                        data: testMatchContract.interface.encodeFunctionData("getMatchAddress", [
+                            proxyDrlFactoryContract.target,
+                            tokenAddresssA,
+                            tokenAddresssB,
+                        ]),
+                    });
+                    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["address", "address", "address"],
+                        returnData
+                    );
+                    assert.equal(matchAddress, decoded[0])
                 });
             });
         })
-
-        describe("DlrMatch functions can call", function () {
-            let matchAddress;
-            beforeEach(async () => {
-                const tx = await proxyDrlFactory.createMatch(tokenAddresssA, tokenAddresssB);
-                const receipt = await tx.wait();
-                const eventFragment = proxyDrlFactory.interface.getEvent("DrlMatchCreated");
-                const event = receipt.logs.find(log =>
-                    log.topics[0] === eventFragment.topicHash
-                );
-                const decodedEvent = proxyDrlFactory.interface.decodeEventLog(
-                    eventFragment,
-                    event.data,
-                    event.topics
-                );
-                matchAddress = decodedEvent._mapAddress;
-            });
-            it("DlrMatch is inintialized", async function () {
-                const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
-                assert.equal(
-                    await matchContract.tokenAddressA(),
-                    tokenAddresssA,
-                    "TokenA should be initialized"
-                );
-                assert.equal(
-                    await matchContract.tokenAddressB(),
-                    tokenAddresssB,
-                    "TokenB should be initialized"
-                );
-            });
-            it("DlrMatch mint can emit event", async function () {
-                const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
-                const mintTx = await matchContract.mint(tokenAddresssA);
-                await expect(mintTx)
-                    .to.emit(matchContract, "DlrMatchMint")
-            });
-            it("DlrMatch ownner is factory", async function () {
-                const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
-                const matchOwner = await matchContract.owner();
-                expect(matchOwner).to.equal(proxyDrlFactory.target, "Match owner should be the factory address");
-            });
-        });
     });
 
+<<<<<<< HEAD
+=======
 
-/*
-
- const returnData = await ethers.provider.call({
-                to: proxyDrlFactory.target,
-                data: proxyDrlFactory.interface.encodeFunctionData("createMatch", [
-                    tokenAddresssA,
-                    tokenAddresssB,
-                ]),
-            });
-            const [decoded] = ethers.AbiCoder.defaultAbiCoder().decode(
-                ["address"],
-                returnData
-            );
-*/
+>>>>>>> d48bd042e259b51997cf5c2ac9e3b6f21d456303

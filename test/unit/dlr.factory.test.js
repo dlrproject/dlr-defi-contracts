@@ -269,7 +269,3 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
         })
     });
 
-<<<<<<< HEAD
-=======
-
->>>>>>> d48bd042e259b51997cf5c2ac9e3b6f21d456303

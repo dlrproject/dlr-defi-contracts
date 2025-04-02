@@ -6,7 +6,6 @@ const DlrFactoryModule = require("../../ignition/modules/dlr.factory");
 const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.mock");
 const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
 
-const dlrFactory = require("../../ignition/modules/dlr.factory");
 
 !developmentChains.includes(network.name)
     ? describe.skip

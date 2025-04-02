@@ -19,7 +19,7 @@ interface IDlrFactory {
     /* Getter Setter */
     function getFeeAddress() external view returns (address);
 
-    function setFeeAddress(address) external;
+    function setFeeAddress(address) external;   
 
     function getMatchHash() external view returns (bytes32);
 }

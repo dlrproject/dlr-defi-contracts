@@ -1,20 +1,26 @@
 /*deploy*/
 const { ethers, ignition, upgrades } = require("hardhat");
 const DlrFactoryModule = require("../ignition/modules/dlr.factory");
+const DlrLiquidityModule = require("../ignition/modules/dlr.liquidity");
 async function main() {
     const [owner, admin, user1, user2, ...addrs] = await ethers.getSigners();
     await ignition.deploy(DlrFactoryModule);
-    let factory = await ethers.getContractFactory("DlrFactory");
-    let proxyFactory = await upgrades.deployProxy(
-        factory,
+    let factoryContractFactory = await ethers.getContractFactory("DlrFactory");
+    let proxyDrlFactoryContract = await upgrades.deployProxy(
+        factoryContractFactory,
         [owner.address],
         { initializer: "initialize" }
     );
-    await proxyFactory.createMatch(
-        "0xF44259a609c777381145b0FbFa257EaC5023ADf9",
-        "0xadB0264dE38aC757D2f98fdB5f3cCAb9a43e178f"
+    console.log("proxyDrlFactoryContract", proxyDrlFactoryContract.target);
+
+    await ignition.deploy(DlrLiquidityModule);
+    let liquidityContractFactory = await ethers.getContractFactory("DlrLiquidity");
+    let proxyDrlLiquidityContract = await upgrades.deployProxy(
+        liquidityContractFactory,
+        [owner.address, proxyDrlFactoryContract.target],
+        { initializer: "initialize" }
     );
-    console.log("proxyAddress", proxyFactory.target);
+    console.log("proxyDrlLiquidityContract", proxyDrlLiquidityContract.target);
 }
 
 main().then(() => {

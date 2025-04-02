@@ -12,19 +12,78 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
     address public factory;
 
     /* Initialize function */
+
     function initialize(
-        address _initialOwner,
+        address initialOwner,
         address _factory
     ) public initializer {
-        __Ownable_init(_initialOwner);
+        __Ownable_init(initialOwner);
         factory = _factory;
     }
 
     /* Main functions */
     function addLiquidity(
-        uint amountA,
-        uint amountB
-    ) external override returns (uint liquidity) {}
+        address tokenAddressIn1,
+        address tokenAddressIn2,
+        uint128 amountIn1,
+        uint128 amountIn2,
+        uint128 amountInMin1,
+        uint128 amountInMin2
+    ) external returns (uint liquidity) {
+        (address tokenAddressA, address tokenAddressB) = Global.orderAddress(
+            tokenAddressIn1,
+            tokenAddressIn2
+        );
+        (address matchAddress, uint128 reserveA, uint128 reserveB) = Match
+            .getMatchReserves(factory, tokenAddressA, tokenAddressB);
+
+        bool isA1 = tokenAddressIn1 == tokenAddressA;
+        (
+            uint128 amountA,
+            uint128 amountB,
+            uint128 amountMinInA,
+            uint128 amountMinInB
+        ) = isA1
+                ? (amountIn1, amountIn2, amountInMin1, amountInMin2)
+                : (amountIn2, amountIn1, amountInMin2, amountInMin1);
+
+        if (reserveA == 0 && reserveB == 0) {
+            (amountA, amountB) = (amountA, amountB);
+        } else if (reserveA > 0 && reserveB > 0 && amountA > 0) {
+            uint128 amountRealB = (amountA * reserveB) / reserveA;
+            if (amountRealB <= amountB) {
+                if (amountRealB >= amountMinInB) {
+                    (amountA, amountB) = (amountA, amountRealB);
+                } else {
+                    revert Dlr_ReserveNotEnough();
+                }
+            } else if (amountB > 0) {
+                uint128 amountRealA = (amountB * reserveA) / reserveB;
+                if (amountRealA <= amountA && amountRealA >= amountMinInA) {
+                    (amountA, amountB) = (amountRealA, amountB);
+                } else {
+                    revert Dlr_ReserveNotEnough();
+                }
+            } else {
+                revert Dlr_ReserveNotEnough();
+            }
+        } else {
+            revert Dlr_ReserveNotEnough();
+        }
+        Global.useTransferFrom(
+            tokenAddressA,
+            msg.sender,
+            matchAddress,
+            amountA
+        );
+        Global.useTransferFrom(
+            tokenAddressB,
+            msg.sender,
+            matchAddress,
+            amountB
+        );
+        liquidity = Match.useMint(matchAddress, msg.sender);
+    }
 
     function removeLiquidity(
         uint liquidity
@@ -57,7 +116,7 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         }
         /* Interactions */
         //approver
-        Match.useTransferFrom(
+        Global.useTransferFrom(
             _tokenAddressIn,
             msg.sender,
             matchAddress,

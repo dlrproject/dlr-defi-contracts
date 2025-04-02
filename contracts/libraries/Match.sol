@@ -9,8 +9,8 @@ import "./Global.sol";
 library Match {
     function getMatchAddress(
         address _factory,
-        address _tokenAddressIn,
-        address _tokenAddressOut
+        address _tokenAddress1,
+        address _tokenAddress2
     )
         internal
         view
@@ -20,11 +20,11 @@ library Match {
             address tokenAddressB
         )
     {
-        bytes32 matchHash = IDlrFactory(_factory).getMatchHash();
         (tokenAddressA, tokenAddressB) = Global.orderAddress(
-            _tokenAddressIn,
-            _tokenAddressOut
+            _tokenAddress1,
+            _tokenAddress2
         );
+        bytes32 matchHash = IDlrFactory(_factory).getMatchHash();
         matchAddress = address(
             uint160(
                 uint(
@@ -45,64 +45,24 @@ library Match {
 
     function getMatchReserves(
         address _factory,
-        address _tokenAddressIn,
-        address _tokenAddressOut
+        address _tokenAddress1,
+        address _tokenAddress2
     )
         internal
         view
-        returns (address matchAddress, uint128 reserveIn, uint128 reserveOut)
+        returns (address matchAddress, uint128 reserve1, uint128 reserve2)
     {
         (address _matchAddress, address tokenAddressA, ) = getMatchAddress(
             _factory,
-            _tokenAddressIn,
-            _tokenAddressOut
+            _tokenAddress1,
+            _tokenAddress2
         );
-        uint128 reserveA = IDlrMatch(matchAddress).reserveA();
-        uint128 reserveB = IDlrMatch(matchAddress).reserveB();
-
-        (uint128 _reserveIn, uint128 _reserveOut) = _tokenAddressIn ==
-            tokenAddressA
+        uint128 reserveA = IDlrMatch(_matchAddress).reserveA();
+        uint128 reserveB = IDlrMatch(_matchAddress).reserveB();
+        matchAddress = _matchAddress;
+        (reserve1, reserve2) = _tokenAddress1 == tokenAddressA
             ? (reserveA, reserveB)
             : (reserveB, reserveA);
-        return (_matchAddress, _reserveIn, _reserveOut);
-    }
-
-    function useTransferFrom(
-        address _tokenAddress,
-        address _from,
-        address _to,
-        uint128 _value
-    ) internal {
-        (bool success, bytes memory data) = _tokenAddress.call(
-            abi.encodeWithSelector(
-                IERC20.transferFrom.selector,
-                _from,
-                _to,
-                _value
-            )
-        );
-        if (!success) {
-            revert Dlr_TransferFail();
-        }
-        if (data.length != 0 || !abi.decode(data, (bool))) {
-            revert Dlr_TransferFail();
-        }
-    }
-
-    function useTransfer(
-        address _tokenAddress,
-        address _to,
-        uint128 _value
-    ) internal {
-        (bool success, bytes memory data) = _tokenAddress.call(
-            abi.encodeWithSelector(IERC20.transfer.selector, _to, _value)
-        );
-        if (!success) {
-            revert Dlr_TransferFail();
-        }
-        if (data.length != 0 || !abi.decode(data, (bool))) {
-            revert Dlr_TransferFail();
-        }
     }
 
     function useSwap(
@@ -112,5 +72,12 @@ library Match {
         address _to
     ) internal {
         IDlrMatch(_matchAddress).swap(_amountOut, _tokenAddressOut, _to);
+    }
+
+    function useMint(
+        address _matchAddress,
+        address _to
+    ) internal returns (uint liquidity) {
+        liquidity = IDlrMatch(_matchAddress).mint(_to);
     }
 }

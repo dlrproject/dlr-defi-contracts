@@ -4,11 +4,12 @@ pragma solidity ^0.8.22;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/dex/IDlrMatch.sol";
-import "./libraries/Match.sol";
 import "./libraries/Global.sol";
 
 contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
+    using Math for uint;
     /* State declarations */
     address public tokenAddressA;
     address public tokenAddressB;
@@ -27,8 +28,27 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
 
     /* Main functions */
     function mint(address _to) external nonReentrant returns (uint liquidity) {
-        // update();
-        emit DlrMatchMint(msg.sender, 1, 2);
+        uint balanceA = IERC20(tokenAddressA).balanceOf(address(this));
+        uint balanceB = IERC20(tokenAddressB).balanceOf(address(this));
+        uint128 amountA = uint128(balanceA - reserveA);
+        uint128 amountB = uint128(balanceB - reserveB);
+        uint _totalSupply = totalSupply;
+        if (_totalSupply == 0) {
+            liquidity = Math.sqrt(amountA * amountB);
+        } else {
+            uint liquidityA = (amountA / reserveA) * _totalSupply;
+            uint liquidityB = (amountB / reserveB) * _totalSupply;
+            liquidity = liquidityA > liquidityB ? liquidityB : liquidityA;
+        }
+        _mint(_to, liquidity);
+        _update(uint128(balanceA), uint128(balanceB));
+        emit DlrMatchMint(_to, amountA, amountB);
+    }
+
+    function _mint(address _to, uint value) internal {
+        totalSupply = totalSupply + value;
+        balanceOf[_to] = balanceOf[_to] + value;
+        emit Transfer(address(0), _to, value);
     }
 
     function burn(
@@ -37,6 +57,12 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         // update();
 
         emit DlrMatchBurn(msg.sender, 11, 22, _to);
+    }
+
+    function _burn(address from, uint value) internal {
+        balanceOf[from] = balanceOf[from] - value;
+        totalSupply = totalSupply - value;
+        emit Transfer(from, address(0), value);
     }
 
     function swap(
@@ -73,7 +99,7 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         if (amountOut > reserveOut) {
             revert Dlr_ReserveNotEnough();
         }
-        Match.useTransfer(tokenAddressOut, _to, amountOut);
+        Global.useTransfer(tokenAddressOut, _to, amountOut);
         uint balanceIn = IERC20(tokenAddressIn).balanceOf(address(this));
         uint balanceOut = IERC20(tokenAddressOut).balanceOf(address(this));
         uint128 amountIn = balanceIn > reserveIn
@@ -82,12 +108,29 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         if ((balanceIn - amountIn) * balanceOut < reserveIn * reserveOut) {
             revert DlrLiquidity_KValueChangedLess();
         }
-        (
-            uint128 amountAIn,
-            uint128 amountBIn,
-            uint128 amountAOut,
-            uint128 amountBOut
-        ) = update(isAout, amountIn, amountOut, balanceIn, balanceOut);
+
+        uint128 amountAIn;
+        uint128 amountBIn;
+        uint128 amountAOut;
+        uint128 amountBOut;
+        uint128 balanceA;
+        uint128 balanceB;
+        if (isAout) {
+            balanceA = uint128(balanceOut);
+            balanceB = uint128(balanceIn);
+            amountAIn = uint128(0);
+            amountBOut = uint128(0);
+            amountAOut = amountOut;
+            amountBIn = amountIn;
+        } else {
+            balanceA = uint128(balanceIn);
+            balanceB = uint128(balanceOut);
+            amountAIn = amountIn;
+            amountBOut = amountAOut;
+            amountAOut = uint128(0);
+            amountBIn = uint128(0);
+        }
+
         emit DlrMatchSwap(
             msg.sender,
             amountAIn,
@@ -99,42 +142,11 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
     }
 
     /* Private functions */
-    function update(
-        bool isAout,
-        uint128 amountIn,
-        uint128 amountOut,
-        uint balanceIn,
-        uint balanceOut
-    )
-        private
-        returns (
-            uint128 amountAIn,
-            uint128 amountBIn,
-            uint128 amountAOut,
-            uint128 amountBOut
-        )
-    {
-        uint128 _reserveA;
-        uint128 _reserveB;
-        if (isAout) {
-            _reserveA = uint128(balanceOut);
-            _reserveB = uint128(balanceIn);
-            amountAIn = uint128(0);
-            amountBOut = uint128(0);
-            amountAOut = amountOut;
-            amountBIn = amountIn;
-        } else {
-            _reserveA = uint128(balanceIn);
-            _reserveB = uint128(balanceOut);
-            amountAIn = amountIn;
-            amountBOut = amountAOut;
-            amountAOut = uint128(0);
-            amountBIn = uint128(0);
-        }
-        kLast = uint256(_reserveB * _reserveB);
-        reserveA = _reserveA;
-        reserveB = _reserveB;
-        emit DlrMatchSync(_reserveB, _reserveB);
+    function _update(uint128 balanceA, uint128 balanceB) private {
+        reserveA = balanceA;
+        reserveB = balanceB;
+        kLast = uint256(reserveA * reserveB);
+        emit DlrMatchSync(reserveA, reserveB);
     }
 
     /* Getter Setter */

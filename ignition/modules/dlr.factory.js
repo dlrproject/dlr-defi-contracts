@@ -10,6 +10,6 @@ module.exports = buildModule("DlrFactoryModule", (m) => {
   const options = {
     from: deployer,
   };
-  const token = m.contract("DlrFactory", args, options)
-  return { token };
+  const factory = m.contract("DlrFactory", args, options)
+  return { factory };
 });

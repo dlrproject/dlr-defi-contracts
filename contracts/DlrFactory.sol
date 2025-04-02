@@ -10,7 +10,7 @@ import "./DlrMatch.sol";
 contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
     /* State Variables */
     bytes private matchBytecode;
-    bytes32 private matchHash;
+    bytes32 public matchHash;
 
     address public feeAddress;
     address[] public contractAddersses;

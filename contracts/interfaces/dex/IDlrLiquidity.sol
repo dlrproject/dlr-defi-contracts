@@ -5,11 +5,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IDlrLiquidity {
     /* Type declarations */
+    /* Initialize function */
+    function initialize(address _initialOwner, address _factory) external;
 
     /* Main functions */
     function addLiquidity(
-        uint amountA,
-        uint amountB
+        address tokenAddressIn1,
+        address tokenAddressIn2,
+        uint128 amountIn1,
+        uint128 amountIn2,
+        uint128 amountInMin1,
+        uint128 amountInMin2
     ) external returns (uint liquidity);
 
     function removeLiquidity(
@@ -17,4 +23,11 @@ interface IDlrLiquidity {
     ) external returns (uint amountA, uint amountB);
 
     /* Getter Setter */
+
+    function swapToken(
+        uint128 _amountIn,
+        uint128 _amountOutMin,
+        address _tokenAddressIn,
+        address _tokenAddressOut
+    ) external returns (uint128 amountOut);
 }

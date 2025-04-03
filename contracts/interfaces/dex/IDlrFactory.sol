@@ -10,6 +10,12 @@ interface IDlrFactory {
         uint _timestamp
     );
 
+    /* State Variables */
+    function matchAddresses(
+        address _tokenAddressA,
+        address _tokenAddressB
+    ) external returns (address);
+
     /* Main functions */
     function createMatch(
         address _tokenAddress1,

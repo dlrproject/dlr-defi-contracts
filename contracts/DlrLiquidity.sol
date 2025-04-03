@@ -34,6 +34,7 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
             tokenAddressIn1,
             tokenAddressIn2
         );
+
         (address matchAddress, uint128 reserveA, uint128 reserveB) = Match
             .getMatchReserves(factory, tokenAddressA, tokenAddressB);
 
@@ -73,7 +74,12 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         } else {
             revert Dlr_ReserveNotEnough();
         }
-
+        if (
+            IDlrFactory(factory).matchAddresses(tokenAddressA, tokenAddressB) ==
+            address(0)
+        ) {
+            IDlrFactory(factory).createMatch(tokenAddressA, tokenAddressB);
+        }
         Global.useTransferFrom(
             tokenAddressA,
             msg.sender,

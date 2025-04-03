@@ -36,8 +36,8 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         if (_totalSupply == 0) {
             liquidity = Math.sqrt(amountA * amountB);
         } else {
-            uint liquidityA = (amountA / reserveA) * _totalSupply;
-            uint liquidityB = (amountB / reserveB) * _totalSupply;
+            uint liquidityA = (amountA * _totalSupply) / reserveA;
+            uint liquidityB = (amountB * _totalSupply) / reserveB;
             liquidity = liquidityA > liquidityB ? liquidityB : liquidityA;
         }
         _mint(_to, liquidity);

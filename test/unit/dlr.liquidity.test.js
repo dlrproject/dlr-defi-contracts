@@ -57,7 +57,6 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                         .to.be.revertedWithCustomError(proxyDrlLiquidityContract, "InvalidInitialization");
                 });
             });
-
             describe("addLiquidity:     DlrLiquidity add Liquidity to match pool", function () {
                 beforeEach(async () => {
                     const TestTokenAddressContractA = await ethers.getContractAt("TestTokenAddress", tokenAddresssA);
@@ -108,6 +107,7 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                         "TokenA should be initialized"
                     );
                 });
+
                 it("DlrLiquidity lp add liquidity can mint lp token amount", async function () {
                     const returnData = await ethers.provider.call({
                         from: admin,

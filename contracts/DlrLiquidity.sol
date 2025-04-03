@@ -47,25 +47,27 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
                 ? (amountIn1, amountIn2, amountInMin1, amountInMin2)
                 : (amountIn2, amountIn1, amountInMin2, amountInMin1);
 
-        if (reserveA == 0 && reserveB == 0) {} else if (
-            reserveA > 0 && reserveB > 0
-        ) {
+        if (reserveA == 0 && reserveB == 0) {
+            if (amountA == 0 && amountB == 0) {
+                revert DlrLiquidity_AmountInZero();
+            }
+        } else if (reserveA > 0 && reserveB > 0) {
             if (amountA == 0) {
-                revert Dlr_LiquidRealAmountLessDesired();
+                revert DlrLiquidity_AmountInZero();
             }
             uint128 amountRealB = (amountA * reserveB) / reserveA;
             if (amountRealB <= amountB) {
                 if (amountRealB < amountMinInB) {
-                    revert Dlr_LiquidRealAmountLessDesired();
+                    revert DlrLiquidity_RealAmountLessDesired();
                 }
                 amountB = amountRealB;
             }
             if (amountB == 0) {
-                revert Dlr_LiquidRealAmountZero();
+                revert DlrLiquidity_AmountInZero();
             }
             uint128 amountRealA = (amountB * reserveA) / reserveB;
             if (!(amountRealA <= amountA && amountRealA >= amountMinInA)) {
-                revert Dlr_LiquidRealAmountLessDesired();
+                revert DlrLiquidity_RealAmountLessDesired();
             }
             amountA = amountRealA;
         } else {

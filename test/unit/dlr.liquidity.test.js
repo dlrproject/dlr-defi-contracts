@@ -58,7 +58,7 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                 });
             });
 
-            describe("addLiquidity:     DlrLiquidity add Liquidity", function () {
+            describe("addLiquidity:     DlrLiquidity add Liquidity to match pool", function () {
                 beforeEach(async () => {
                     const TestTokenAddressContractA = await ethers.getContractAt("TestTokenAddress", tokenAddresssA);
                     await TestTokenAddressContractA.connect(owner).transfer(admin, ethers.parseEther("2"));
@@ -69,7 +69,46 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                     assert.equal(await TestTokenAddressContractA.connect(admin).balanceOf(admin), ethers.parseEther("2"))
                     assert.equal(await TestTokenAddressContractB.connect(admin).balanceOf(admin), ethers.parseEther("200"))
                 })
-                it("DlrLiquidity lp add pool liquidity again", async function () {
+                it("DlrLiquidity lp liquidity amount in can't be zero", async function () {
+                    await expect(proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, 0, 0, 0, 0)).to.be.revertedWithCustomError(proxyDrlLiquidityContract, "DlrLiquidity_AmountInZero");
+
+                    await proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, ethers.parseEther("1"), ethers.parseEther("100"), ethers.parseEther("1"), ethers.parseEther("100"));
+
+                    await expect(proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, 0, ethers.parseEther("100"), 0, ethers.parseEther("100"))).to.be.revertedWithCustomError(proxyDrlLiquidityContract, "DlrLiquidity_AmountInZero");
+
+                    await expect(proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, ethers.parseEther("1"), 0, ethers.parseEther("1"), 0)).to.be.revertedWithCustomError(proxyDrlLiquidityContract, "DlrLiquidity_AmountInZero");
+                });
+                it("DlrLiquidity lp liquidity real amount can't less desired", async function () {
+                    await proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, ethers.parseEther("1"), ethers.parseEther("100"), ethers.parseEther("1"), ethers.parseEther("100"));
+                    await expect(proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, ethers.parseEther("1"), ethers.parseEther("100"), ethers.parseEther("2"), ethers.parseEther("100"))).to.be.revertedWithCustomError(proxyDrlLiquidityContract, "DlrLiquidity_RealAmountLessDesired");
+                    await expect(proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, ethers.parseEther("1"), ethers.parseEther("100"), ethers.parseEther("1"), ethers.parseEther("200"))).to.be.revertedWithCustomError(proxyDrlLiquidityContract, "DlrLiquidity_RealAmountLessDesired");
+                });
+                it("DlrLiquidity lp liquidity can transfer and update match pool reserve", async function () {
+                    await proxyDrlLiquidityContract.connect(admin).addLiquidity(tokenAddresssA, tokenAddresssB, ethers.parseEther("1"), ethers.parseEther("100"), ethers.parseEther("1"), ethers.parseEther("100"));
+                    const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
+                    assert.equal(
+                        await matchContract.reserveA(),
+                        ethers.parseEther("1"),
+                        "TokenA should be initialized"
+                    );
+                    assert.equal(
+                        await matchContract.reserveB(),
+                        ethers.parseEther("100"),
+                        "TokenB should be initialized"
+                    );
+
+                    assert.equal(
+                        await matchContract.getPriceA(),
+                        100 * 1000,
+                        "TokenA should be initialized"
+                    );
+                    assert.equal(
+                        await matchContract.getPriceB(),
+                        0.01 * 1000,
+                        "TokenA should be initialized"
+                    );
+                });
+                it("DlrLiquidity lp add liquidity can mint lp token amount", async function () {
                     const returnData = await ethers.provider.call({
                         from: admin,
                         to: proxyDrlLiquidityContract.target,
@@ -83,7 +122,29 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                         ]),
                     });
                     const [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
-                        ["address"],
+                        ["uint"],
+                        returnData
+                    );
+                    assert(liquidity, ethers.parseEther("10"))
+                    const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
+                    assert(liquidity, await matchContract.balanceOf(admin))
+                });
+
+                it("DlrLiquidity lp add liquidity update match pool totalSupply", async function () {
+                    const returnData = await ethers.provider.call({
+                        from: admin,
+                        to: proxyDrlLiquidityContract.target,
+                        data: proxyDrlLiquidityContract.interface.encodeFunctionData("addLiquidity", [
+                            tokenAddresssA,
+                            tokenAddresssB,
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100"),
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100")
+                        ]),
+                    });
+                    const [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["uint"],
                         returnData
                     );
                     assert(liquidity, ethers.parseEther("10"))
@@ -100,35 +161,16 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                         ]),
                     });
                     const [liquidity2] = ethers.AbiCoder.defaultAbiCoder().decode(
-                        ["address"],
+                        ["uint"],
                         returnData2
                     );
                     assert(liquidity2, ethers.parseEther("10"))
-                });
-                it("DlrLiquidity lp first add pool liquidity", async function () {
-                    const returnData = await ethers.provider.call({
-                        from: admin,
-                        to: proxyDrlLiquidityContract.target,
-                        data: proxyDrlLiquidityContract.interface.encodeFunctionData("addLiquidity", [
-                            tokenAddresssA,
-                            tokenAddresssB,
-                            ethers.parseEther("1"),
-                            ethers.parseEther("100"),
-                            ethers.parseEther("1"),
-                            ethers.parseEther("100")
-                        ]),
-                    });
-                    const [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
-                        ["address"],
-                        returnData
-                    );
-                    assert(liquidity, ethers.parseEther("10"))
-                });
-                it("DlrLiquidity lp add pool liquidity again", async function () {
-
+                    const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
+                    assert(liquidity + liquidity2, await matchContract.balanceOf(admin))
+                    assert(liquidity + liquidity2, await matchContract.totalSupply())
                 });
             });
-            describe("swapToken:        DlrLiquidity swap token", function () {
+            describe("swapToken:        DlrLiquidity swap token from match pool", function () {
                 let liquidity;
                 beforeEach(async () => {
                     const TestTokenAddressContractA = await ethers.getContractAt("TestTokenAddress", tokenAddresssA);
@@ -155,7 +197,7 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                         ]),
                     });
                     [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
-                        ["address"],
+                        ["uint"],
                         returnData
                     );
                     const returnData2 = await ethers.provider.call({
@@ -171,12 +213,18 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
                         ]),
                     });
                     [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
-                        ["address"],
+                        ["uint"],
                         returnData2
                     );
                 })
+                it("DlrLiquidity lp liquidity amount in can't be zero", async function () {
+
+                });
             });
         });
     });
+
+
+
 
 

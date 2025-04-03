@@ -55,7 +55,7 @@ interface IDlrMatch is IERC20 {
     function getPriceB() external view returns (uint priceB);
 
     function tokenAddressA() external view returns (address);
-
+    
     function tokenAddressB() external view returns (address);
 
     /************************ERC20************************/

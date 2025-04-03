@@ -3,22 +3,32 @@
 pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+/*
+Global
+*/
 
 error Dlr_TransferFail();
 error Dlr_AddressZero();
 error Dlr_ReserveNotEnough();
-error Dlr_LiquidRealAmountLessDesired();
-error Dlr_LiquidRealAmountZero();
+/*
+Factory
+*/
+error DlrFactory_TokenAddressSame();
+error DlrFactory_MatchAlreadyExists();
+/*
+Match
+*/
 error DlrMatch_AmountOutZero();
 error DlrMatch_ApproveNotEnough();
 error DlrMatch_SwapToAddressNotMatch();
-
-error DlrFactory_TokenAddressSame();
-error DlrFactory_MatchAlreadyExists();
-
+/*
+Liquidity
+*/
 error DlrLiquidity_DesireAmountOutChanged();
 error DlrLiquidity_AmountInZero();
 error DlrLiquidity_KValueChangedLess();
+error DlrLiquidity_RealAmountLessDesired();
+error DlrLiquidity_RealAmountZero();
 
 library Global {
     function orderAddress(

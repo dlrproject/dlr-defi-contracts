@@ -155,11 +155,11 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
 
     /* Getter Setter */
     function getPriceA() public view returns (uint priceA) {
-        priceA = (reserveB / reserveA);
+        priceA = (1000 * reserveB) / reserveA;
     }
 
     function getPriceB() public view returns (uint priceB) {
-        priceB = (reserveA / reserveB);
+        priceB = (1000 * reserveA) / reserveB;
     }
 
     /************************ERC20************************/

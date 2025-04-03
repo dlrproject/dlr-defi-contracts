@@ -12,8 +12,8 @@ interface IDlrFactory {
 
     /* Main functions */
     function createMatch(
-        address _tokenAddressA,
-        address _tokenAddressB
+        address _tokenAddress1,
+        address _tokenAddress2
     ) external returns (address matchAddress);
 
     /* Getter Setter */

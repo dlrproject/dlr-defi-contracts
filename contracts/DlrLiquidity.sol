@@ -47,29 +47,31 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
                 ? (amountIn1, amountIn2, amountInMin1, amountInMin2)
                 : (amountIn2, amountIn1, amountInMin2, amountInMin1);
 
-        if (reserveA == 0 && reserveB == 0) {
-            (amountA, amountB) = (amountA, amountB);
-        } else if (reserveA > 0 && reserveB > 0 && amountA > 0) {
+        if (reserveA == 0 && reserveB == 0) {} else if (
+            reserveA > 0 && reserveB > 0
+        ) {
+            if (amountA == 0) {
+                revert Dlr_LiquidRealAmountLessDesired();
+            }
             uint128 amountRealB = (amountA * reserveB) / reserveA;
             if (amountRealB <= amountB) {
-                if (amountRealB >= amountMinInB) {
-                    (amountA, amountB) = (amountA, amountRealB);
-                } else {
-                    revert Dlr_ReserveNotEnough();
+                if (amountRealB < amountMinInB) {
+                    revert Dlr_LiquidRealAmountLessDesired();
                 }
-            } else if (amountB > 0) {
-                uint128 amountRealA = (amountB * reserveA) / reserveB;
-                if (amountRealA <= amountA && amountRealA >= amountMinInA) {
-                    (amountA, amountB) = (amountRealA, amountB);
-                } else {
-                    revert Dlr_ReserveNotEnough();
-                }
-            } else {
-                revert Dlr_ReserveNotEnough();
+                amountB = amountRealB;
             }
+            if (amountB == 0) {
+                revert Dlr_LiquidRealAmountZero();
+            }
+            uint128 amountRealA = (amountB * reserveA) / reserveB;
+            if (!(amountRealA <= amountA && amountRealA >= amountMinInA)) {
+                revert Dlr_LiquidRealAmountLessDesired();
+            }
+            amountA = amountRealA;
         } else {
             revert Dlr_ReserveNotEnough();
         }
+
         Global.useTransferFrom(
             tokenAddressA,
             msg.sender,

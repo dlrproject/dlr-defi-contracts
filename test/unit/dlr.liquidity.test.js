@@ -59,27 +59,122 @@ const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.moc
             });
 
             describe("addLiquidity:     DlrLiquidity add Liquidity", function () {
-                it("DlrLiquidity lp first add pool", async function () {
+                beforeEach(async () => {
+                    const TestTokenAddressContractA = await ethers.getContractAt("TestTokenAddress", tokenAddresssA);
+                    await TestTokenAddressContractA.connect(owner).transfer(admin, ethers.parseEther("2"));
+                    const TestTokenAddressContractB = await ethers.getContractAt("TestTokenAddress", tokenAddresssB);
+                    await TestTokenAddressContractB.connect(owner).transfer(admin, ethers.parseEther("200"));
+                    await TestTokenAddressContractA.connect(admin).approve(proxyDrlLiquidityContract.target, ethers.parseEther("2"));
+                    await TestTokenAddressContractB.connect(admin).approve(proxyDrlLiquidityContract.target, ethers.parseEther("200"));
+                    assert.equal(await TestTokenAddressContractA.connect(admin).balanceOf(admin), ethers.parseEther("2"))
+                    assert.equal(await TestTokenAddressContractB.connect(admin).balanceOf(admin), ethers.parseEther("200"))
+                })
+                it("DlrLiquidity lp add pool liquidity again", async function () {
+                    const returnData = await ethers.provider.call({
+                        from: admin,
+                        to: proxyDrlLiquidityContract.target,
+                        data: proxyDrlLiquidityContract.interface.encodeFunctionData("addLiquidity", [
+                            tokenAddresssA,
+                            tokenAddresssB,
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100"),
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100")
+                        ]),
+                    });
+                    const [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["address"],
+                        returnData
+                    );
+                    assert(liquidity, ethers.parseEther("10"))
+                    const returnData2 = await ethers.provider.call({
+                        from: admin,
+                        to: proxyDrlLiquidityContract.target,
+                        data: proxyDrlLiquidityContract.interface.encodeFunctionData("addLiquidity", [
+                            tokenAddresssA,
+                            tokenAddresssB,
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100"),
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100")
+                        ]),
+                    });
+                    const [liquidity2] = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["address"],
+                        returnData2
+                    );
+                    assert(liquidity2, ethers.parseEther("10"))
+                });
+                it("DlrLiquidity lp first add pool liquidity", async function () {
+                    const returnData = await ethers.provider.call({
+                        from: admin,
+                        to: proxyDrlLiquidityContract.target,
+                        data: proxyDrlLiquidityContract.interface.encodeFunctionData("addLiquidity", [
+                            tokenAddresssA,
+                            tokenAddresssB,
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100"),
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100")
+                        ]),
+                    });
+                    const [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["address"],
+                        returnData
+                    );
+                    assert(liquidity, ethers.parseEther("10"))
+                });
+                it("DlrLiquidity lp add pool liquidity again", async function () {
+
+                });
+            });
+            describe("swapToken:        DlrLiquidity swap token", function () {
+                let liquidity;
+                beforeEach(async () => {
                     const TestTokenAddressContractA = await ethers.getContractAt("TestTokenAddress", tokenAddresssA);
                     await TestTokenAddressContractA.connect(owner).transfer(admin, ethers.parseEther("2"));
                     const TestTokenAddressContractB = await ethers.getContractAt("TestTokenAddress", tokenAddresssB);
                     await TestTokenAddressContractB.connect(owner).transfer(admin, ethers.parseEther("200"));
 
-                    const tx = await proxyDrlLiquidityContract.connect(admin).addLiquidity(
-                        tokenAddresssA,
-                        tokenAddresssB,
-                        ethers.parseEther("1"),
-                        ethers.parseEther("100"),
-                        ethers.parseEther("1"),
-                        ethers.parseEther("100")
+                    await TestTokenAddressContractA.connect(admin).approve(proxyDrlLiquidityContract.target, ethers.parseEther("2"));
+                    await TestTokenAddressContractB.connect(admin).approve(proxyDrlLiquidityContract.target, ethers.parseEther("200"));
+
+                    assert.equal(await TestTokenAddressContractA.connect(admin).balanceOf(admin), ethers.parseEther("2"))
+                    assert.equal(await TestTokenAddressContractB.connect(admin).balanceOf(admin), ethers.parseEther("200"))
+
+                    const returnData = await ethers.provider.call({
+                        from: admin,
+                        to: proxyDrlLiquidityContract.target,
+                        data: proxyDrlLiquidityContract.interface.encodeFunctionData("addLiquidity", [
+                            tokenAddresssA,
+                            tokenAddresssB,
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100"),
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100")
+                        ]),
+                    });
+                    [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["address"],
+                        returnData
                     );
-                });
-            });
-            describe("swapToken:        DlrLiquidity swap token", function () {
-                // it("DlrLiquidity swap token can", async function () {
-
-
-                // });
+                    const returnData2 = await ethers.provider.call({
+                        from: admin,
+                        to: proxyDrlLiquidityContract.target,
+                        data: proxyDrlLiquidityContract.interface.encodeFunctionData("addLiquidity", [
+                            tokenAddresssA,
+                            tokenAddresssB,
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100"),
+                            ethers.parseEther("1"),
+                            ethers.parseEther("100")
+                        ]),
+                    });
+                    [liquidity] = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["address"],
+                        returnData2
+                    );
+                })
             });
         });
     });

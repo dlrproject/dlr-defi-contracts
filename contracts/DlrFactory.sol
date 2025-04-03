@@ -34,43 +34,42 @@ contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
 
     /* Main functions */
     function createMatch(
-        address _tokenAddressA,
-        address _tokenAddressB
+        address _tokenAddress1,
+        address _tokenAddress2
     ) external returns (address matchAddress) {
         /* Checks */
-        if (_tokenAddressA == _tokenAddressB) {
+        if (_tokenAddress1 == _tokenAddress2) {
             revert DlrFactory_TokenAddressSame();
         }
-        if (matchAddresses[_tokenAddressA][_tokenAddressB] != address(0)) {
+        if (matchAddresses[_tokenAddress1][_tokenAddress2] != address(0)) {
             revert DlrFactory_MatchAlreadyExists();
         }
-        (_tokenAddressA, _tokenAddressB) = Global.orderAddress(
-            _tokenAddressA,
-            _tokenAddressB
+        (address tokenAddressA, address tokenAddressB) = Global.orderAddress(
+            _tokenAddress1,
+            _tokenAddress2
         );
-        if (_tokenAddressA == address(0)) {
+        if (tokenAddressA == address(0)) {
             revert Dlr_AddressZero();
         }
         /* Effects */
-
         bytes32 salt = keccak256(
-            abi.encodePacked(_tokenAddressA, _tokenAddressB)
+            abi.encodePacked(tokenAddressA, tokenAddressB)
         );
         bytes memory bytecode = matchBytecode;
         assembly {
             matchAddress := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
 
-        matchAddresses[_tokenAddressA][_tokenAddressB] = matchAddress;
-        matchAddresses[_tokenAddressB][_tokenAddressA] = matchAddress;
+        matchAddresses[tokenAddressA][tokenAddressB] = matchAddress;
+        matchAddresses[tokenAddressA][tokenAddressB] = matchAddress;
         contractAddersses.push(matchAddress);
 
         /* Interactions */
-        IDlrMatch(matchAddress).initialize(_tokenAddressA, _tokenAddressB);
+        IDlrMatch(matchAddress).initialize(tokenAddressA, tokenAddressB);
 
         emit DrlMatchCreated(
-            _tokenAddressA,
-            _tokenAddressB,
+            tokenAddressA,
+            tokenAddressB,
             matchAddress,
             block.timestamp
         );

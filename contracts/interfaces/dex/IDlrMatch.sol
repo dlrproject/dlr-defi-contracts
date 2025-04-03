@@ -40,6 +40,10 @@ interface IDlrMatch is IERC20 {
         address _to
     ) external;
 
+    function skim(address to) external;
+
+    function sync() external;
+
     /* Gettter Setter */
 
     function reserveA() external view returns (uint128 priceA);

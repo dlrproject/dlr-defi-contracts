@@ -10,12 +10,12 @@ interface IDlrLiquidity {
 
     /* Main functions */
     function addLiquidity(
-        address tokenAddressIn1,
-        address tokenAddressIn2,
-        uint128 amountIn1,
-        uint128 amountIn2,
-        uint128 amountInMin1,
-        uint128 amountInMin2
+        address _tokenAddressIn1,
+        address _tokenAddressIn2,
+        uint128 _amountIn1,
+        uint128 _amountIn2,
+        uint128 _amountInMin1,
+        uint128 _amountInMin2
     ) external returns (uint liquidity);
 
     function removeLiquidity(

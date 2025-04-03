@@ -45,24 +45,12 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         emit DlrMatchMint(_to, amountA, amountB);
     }
 
-    function _mint(address _to, uint value) internal {
-        totalSupply = totalSupply + value;
-        balanceOf[_to] = balanceOf[_to] + value;
-        emit Transfer(address(0), _to, value);
-    }
-
     function burn(
         address _to
     ) external nonReentrant returns (uint amountA, uint amountB) {
         // update();
 
         emit DlrMatchBurn(msg.sender, 11, 22, _to);
-    }
-
-    function _burn(address from, uint value) internal {
-        balanceOf[from] = balanceOf[from] - value;
-        totalSupply = totalSupply - value;
-        emit Transfer(from, address(0), value);
     }
 
     function swap(
@@ -141,7 +129,23 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         );
     }
 
+    function skim(address to) external nonReentrant {}
+
+    function sync() external nonReentrant {}
+
     /* Private functions */
+    function _burn(address from, uint value) internal {
+        balanceOf[from] = balanceOf[from] - value;
+        totalSupply = totalSupply - value;
+        emit Transfer(from, address(0), value);
+    }
+
+    function _mint(address _to, uint value) internal {
+        totalSupply = totalSupply + value;
+        balanceOf[_to] = balanceOf[_to] + value;
+        emit Transfer(address(0), _to, value);
+    }
+
     function _update(uint128 balanceA, uint128 balanceB) private {
         reserveA = balanceA;
         reserveB = balanceB;
@@ -159,7 +163,7 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
     }
 
     /************************ERC20************************/
-    string public constant name = "DLR Match Token";
+    string public constant name = "DLR LP Token";
     string public constant symbol = "DLR";
     uint8 public constant decimals = 18;
     uint public totalSupply;
@@ -189,9 +193,6 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         address to,
         uint value
     ) external override nonReentrant returns (bool) {
-        if (allowance[from][msg.sender] < value) {
-            revert DlrMatch_ApproveNotEnough();
-        }
         allowance[from][msg.sender] -= value;
         _transfer(from, to, value);
         return true;

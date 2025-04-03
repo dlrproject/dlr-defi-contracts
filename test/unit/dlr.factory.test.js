@@ -70,18 +70,13 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
                 });
             });
             describe("createMatch:      DlrFactory can create match pool", function () {
-                it("DlrFactory can't same token address ", async function () {
-                    await expect(proxyDrlFactoryContract.connect(admin).createMatch(
-                        tokenAddresssA,
-                        tokenAddresssA,
-                    )).to.be.revertedWithCustomError(proxyDrlFactoryContract, "DlrFactory_TokenAddressSame");
-                });
                 it("DlrFactory can't be zero address ", async function () {
                     await expect(proxyDrlFactoryContract.connect(admin).createMatch(
                         tokenAddresssA,
                         adddressZero,
                     )).to.be.revertedWithCustomError(proxyDrlFactoryContract, "Dlr_AddressZero");
                 });
+
                 it("DlrFactory can't be exists address ", async function () {
                     await proxyDrlFactoryContract.connect(admin).createMatch(
                         tokenAddresssA,
@@ -91,6 +86,13 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
                         tokenAddresssA,
                         tokenAddresssB,
                     )).to.be.revertedWithCustomError(proxyDrlFactoryContract, "DlrFactory_MatchAlreadyExists");
+                });
+
+                it("DlrFactory can't same token address ", async function () {
+                    await expect(proxyDrlFactoryContract.connect(admin).createMatch(
+                        tokenAddresssA,
+                        tokenAddresssA,
+                    )).to.be.revertedWithCustomError(proxyDrlFactoryContract, "DlrFactory_TokenAddressSame");
                 });
                 it("DlrFactory call create match can emit created event", async function () {
                     const tx = await proxyDrlFactoryContract.connect(admin).createMatch(
@@ -133,27 +135,6 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
                     assert.notEqual(matchAddress, ethers.ZeroAddress, "Invalid contract address");
                     const code = await ethers.provider.getCode(matchAddress);
                     assert.notEqual(code, "0x", "Contract code should be deployed");
-                });
-                it("DlrFactory call create match builded contract hash ", async function () {
-                    const tx = await proxyDrlFactoryContract.createMatch(tokenAddresssA, tokenAddresssB);
-                    const receipt = await tx.wait();
-                    const eventFragment = proxyDrlFactoryContract.interface.getEvent("DrlMatchCreated");
-                    const event = receipt.logs.find(log =>
-                        log.topics[0] === eventFragment.topicHash
-                    );
-
-                    assert.exists(event, "DrlMatchCreated event should be emitted");
-                    const decodedEvent = proxyDrlFactoryContract.interface.decodeEventLog(
-                        eventFragment,
-                        event.data,
-                        event.topics
-                    );
-                    const matchAddress = decodedEvent._matchAddress;
-
-
-
-
-
                 });
             });
             describe("setFeeAddress:    DlrFactory can set Fee Address ", function () {

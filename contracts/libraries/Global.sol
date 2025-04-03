@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 error Dlr_TransferFail();
 error Dlr_AddressZero();
 error Dlr_ReserveNotEnough();
+error Dlr_LiquidRealAmountLessDesired();
+error Dlr_LiquidRealAmountZero();
 error DlrMatch_AmountOutZero();
 error DlrMatch_ApproveNotEnough();
 error DlrMatch_SwapToAddressNotMatch();
@@ -33,18 +35,8 @@ library Global {
         address _to,
         uint128 _value
     ) internal {
-        (bool success, bytes memory data) = _tokenAddress.call(
-            abi.encodeWithSelector(
-                IERC20.transferFrom.selector,
-                _from,
-                _to,
-                _value
-            )
-        );
+        bool success = IERC20(_tokenAddress).transferFrom(_from, _to, _value);
         if (!success) {
-            revert Dlr_TransferFail();
-        }
-        if (data.length != 0 || !abi.decode(data, (bool))) {
             revert Dlr_TransferFail();
         }
     }
@@ -54,13 +46,8 @@ library Global {
         address _to,
         uint128 _value
     ) internal {
-        (bool success, bytes memory data) = _tokenAddress.call(
-            abi.encodeWithSelector(IERC20.transfer.selector, _to, _value)
-        );
+        bool success = IERC20(_tokenAddress).transfer(_to, _value);
         if (!success) {
-            revert Dlr_TransferFail();
-        }
-        if (data.length != 0 || !abi.decode(data, (bool))) {
             revert Dlr_TransferFail();
         }
     }

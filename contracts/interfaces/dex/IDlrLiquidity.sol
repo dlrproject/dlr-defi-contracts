@@ -7,8 +7,6 @@ interface IDlrLiquidity {
     event DlrLiquidityInvestment(
         address indexed _sender,
         address indexed _matchAddress,
-        address _tokenAddressA,
-        address _tokenAddressB,
         uint128 _amountA,
         uint128 _amountB,
         uint _liquidity
@@ -16,8 +14,6 @@ interface IDlrLiquidity {
     event DlrLiquidityProfit(
         address indexed _sender,
         address indexed _matchAddress,
-        address _tokenAddressA,
-        address _tokenAddressB,
         uint128 _amountA,
         uint128 _amountB,
         uint _liquidity

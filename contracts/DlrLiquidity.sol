@@ -96,8 +96,6 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         emit DlrLiquidityInvestment(
             msg.sender,
             matchAddress,
-            tokenAddressA,
-            tokenAddressB,
             amountA,
             amountB,
             liquidity
@@ -111,11 +109,11 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         uint128 _amountMin1,
         uint128 _amountMin2
     ) external returns (uint128 amount1, uint128 amount2) {
-        (
-            address matchAddress,
-            address tokenAddressA,
-            address tokenAddressB
-        ) = Match.getMatchAddress(factory, _tokenAddressIn1, _tokenAddressIn2);
+        (address matchAddress, address tokenAddressA, ) = Match.getMatchAddress(
+            factory,
+            _tokenAddressIn1,
+            _tokenAddressIn2
+        );
         Global.useTransferFrom(
             matchAddress,
             msg.sender,
@@ -135,8 +133,6 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         emit DlrLiquidityProfit(
             msg.sender,
             matchAddress,
-            tokenAddressA,
-            tokenAddressB,
             amountA,
             amountB,
             _liquidity

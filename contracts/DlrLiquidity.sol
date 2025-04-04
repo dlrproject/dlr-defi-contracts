@@ -93,36 +93,54 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
             amountB
         );
         liquidity = Match.useMint(matchAddress, msg.sender);
+        emit DlrLiquidityInvestment(
+            msg.sender,
+            matchAddress,
+            tokenAddressA,
+            tokenAddressB,
+            amountA,
+            amountB,
+            liquidity
+        );
     }
 
     function removeLiquidity(
-        address tokenAddressIn1,
-        address tokenAddressIn2,
-        uint128 liquidity,
-        uint128 amountMin1,
-        uint128 amountMin2
+        address _tokenAddressIn1,
+        address _tokenAddressIn2,
+        uint128 _liquidity,
+        uint128 _amountMin1,
+        uint128 _amountMin2
     ) external returns (uint128 amount1, uint128 amount2) {
-        (address matchAddress, address tokenAddressA, ) = Match.getMatchAddress(
-            factory,
-            tokenAddressIn1,
-            tokenAddressIn2
-        );
+        (
+            address matchAddress,
+            address tokenAddressA,
+            address tokenAddressB
+        ) = Match.getMatchAddress(factory, _tokenAddressIn1, _tokenAddressIn2);
         Global.useTransferFrom(
             matchAddress,
             msg.sender,
             matchAddress,
-            liquidity
+            _liquidity
         );
         (uint128 amountA, uint128 amountB) = Match.useBurn(
             matchAddress,
             msg.sender
         );
-        (amount1, amount2) = tokenAddressA == tokenAddressIn1
+        (amount1, amount2) = tokenAddressA == _tokenAddressIn1
             ? (amountA, amountB)
             : (amountB, amountA);
-        if (amount1 < amountMin1 || amount2 < amountMin2) {
+        if (amount1 < _amountMin1 || amount2 < _amountMin2) {
             revert DlrLiquidity_RealAmountLessDesired();
         }
+        emit DlrLiquidityProfit(
+            msg.sender,
+            matchAddress,
+            tokenAddressA,
+            tokenAddressB,
+            amountA,
+            amountB,
+            _liquidity
+        );
     }
 
     function swapToken(
@@ -159,6 +177,15 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
             _amountIn
         );
         Match.useSwap(matchAddress, amountOut, _tokenAddressOut, msg.sender);
+
+        emit DlrLiquiditySwapToken(
+            msg.sender,
+            matchAddress,
+            _tokenAddressIn,
+            _tokenAddressOut,
+            _amountIn,
+            amountOut
+        );
     }
     /* Getter Setter */
 }

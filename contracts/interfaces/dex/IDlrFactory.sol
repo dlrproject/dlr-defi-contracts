@@ -22,10 +22,6 @@ interface IDlrFactory {
         address _tokenAddress2
     ) external returns (address matchAddress);
 
-    /* Getter Setter */
-    function getFeeAddress() external view returns (address);
-
-    function setFeeAddress(address) external;
-
+    /* Getter Setter */ 
     function getMatchHash() external view returns (bytes32);
 }

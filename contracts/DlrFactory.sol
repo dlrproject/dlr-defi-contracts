@@ -12,7 +12,6 @@ contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
     bytes private matchBytecode;
     bytes32 public matchHash;
 
-    address public feeAddress;
     address[] public contractAddersses;
     mapping(address => mapping(address => address)) public matchAddresses;
 
@@ -76,17 +75,6 @@ contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
     }
 
     /* Getter Setter */
-    function setFeeAddress(address _feeAddress) external onlyOwner {
-        if (_feeAddress == address(0)) {
-            revert Dlr_AddressZero();
-        }
-        feeAddress = _feeAddress;
-    }
-
-    function getFeeAddress() external view returns (address) {
-        return feeAddress;
-    }
-
     function getMatchHash() external view returns (bytes32) {
         return matchHash;
     }

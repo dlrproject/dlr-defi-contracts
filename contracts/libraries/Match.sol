@@ -80,4 +80,11 @@ library Match {
     ) internal returns (uint liquidity) {
         liquidity = IDlrMatch(_matchAddress).mint(_to);
     }
+
+    function useBurn(
+        address _matchAddress,
+        address _to
+    ) internal returns (uint128 amountA, uint128 amountB) {
+        (amountA, amountB) = IDlrMatch(_matchAddress).burn(_to);
+    }
 }

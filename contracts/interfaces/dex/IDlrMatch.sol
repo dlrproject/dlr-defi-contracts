@@ -32,7 +32,9 @@ interface IDlrMatch is IERC20 {
     /* Main functions */
     function mint(address _to) external returns (uint liquidity);
 
-    function burn(address _to) external returns (uint amountA, uint amountB);
+    function burn(
+        address _to
+    ) external returns (uint128 amountA, uint128 amountB);
 
     function swap(
         uint128 _amountOut,
@@ -55,7 +57,7 @@ interface IDlrMatch is IERC20 {
     function getPriceB() external view returns (uint priceB);
 
     function tokenAddressA() external view returns (address);
-    
+
     function tokenAddressB() external view returns (address);
 
     /************************ERC20************************/

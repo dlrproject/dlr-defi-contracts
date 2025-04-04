@@ -47,10 +47,21 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
 
     function burn(
         address _to
-    ) external nonReentrant returns (uint amountA, uint amountB) {
-        // update();
+    ) external nonReentrant returns (uint128 amountA, uint128 amountB) {
+        uint balanceA = IERC20(tokenAddressA).balanceOf(address(this));
+        uint balanceB = IERC20(tokenAddressB).balanceOf(address(this));
+        uint liquidity = balanceOf[address(this)];
 
-        emit DlrMatchBurn(msg.sender, 11, 22, _to);
+        amountA = uint128((liquidity * balanceA) / totalSupply); // using balances ensures pro-rata distribution
+        amountB = uint128((liquidity * balanceB) / totalSupply);
+
+        _burn(address(this), liquidity);
+        Global.useTransfer(tokenAddressA, _to, amountA);
+        Global.useTransfer(tokenAddressB, _to, amountB);
+        balanceA = IERC20(tokenAddressA).balanceOf(address(this));
+        balanceB = IERC20(tokenAddressB).balanceOf(address(this));
+        _update(uint128(balanceA), uint128(balanceB));
+        emit DlrMatchBurn(msg.sender, amountA, amountB, _to);
     }
 
     function swap(
@@ -129,9 +140,25 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         );
     }
 
-    function skim(address to) external nonReentrant {}
+    function skim(address _to) external nonReentrant {
+        Global.useTransfer(
+            tokenAddressA,
+            _to,
+            uint128(IERC20(tokenAddressA).balanceOf(address(this)) - (reserveA))
+        );
+        Global.useTransfer(
+            tokenAddressB,
+            _to,
+            uint128(IERC20(tokenAddressB).balanceOf(address(this)) - (reserveB))
+        );
+    }
 
-    function sync() external nonReentrant {}
+    function sync() external nonReentrant {
+        _update(
+            uint128(IERC20(tokenAddressA).balanceOf(address(this))),
+            uint128(IERC20(tokenAddressB).balanceOf(address(this)))
+        );
+    }
 
     /* Private functions */
     function _burn(address from, uint value) internal {

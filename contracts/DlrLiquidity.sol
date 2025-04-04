@@ -96,8 +96,34 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
     }
 
     function removeLiquidity(
-        uint liquidity
-    ) external override returns (uint amountOut, uint amountB) {}
+        address tokenAddressIn1,
+        address tokenAddressIn2,
+        uint128 liquidity,
+        uint128 amountMin1,
+        uint128 amountMin2
+    ) external returns (uint128 amount1, uint128 amount2) {
+        (address matchAddress, address tokenAddressA, ) = Match.getMatchAddress(
+            factory,
+            tokenAddressIn1,
+            tokenAddressIn2
+        );
+        Global.useTransferFrom(
+            matchAddress,
+            msg.sender,
+            matchAddress,
+            liquidity
+        );
+        (uint128 amountA, uint128 amountB) = Match.useBurn(
+            matchAddress,
+            msg.sender
+        );
+        (amount1, amount2) = tokenAddressA == tokenAddressIn1
+            ? (amountA, amountB)
+            : (amountB, amountA);
+        if (amount1 < amountMin1 || amount2 < amountMin2) {
+            revert DlrLiquidity_RealAmountLessDesired();
+        }
+    }
 
     function swapToken(
         uint128 _amountIn,

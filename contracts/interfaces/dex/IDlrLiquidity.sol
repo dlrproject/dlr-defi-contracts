@@ -19,8 +19,12 @@ interface IDlrLiquidity {
     ) external returns (uint liquidity);
 
     function removeLiquidity(
-        uint liquidity
-    ) external returns (uint amountA, uint amountB);
+        address tokenAddressIn1,
+        address tokenAddressIn2,
+        uint128 liquidity,
+        uint128 amountMin1,
+        uint128 amountMin2
+    ) external returns (uint128 amount1, uint128 amount2);
 
     /* Getter Setter */
 

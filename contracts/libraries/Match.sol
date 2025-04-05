@@ -57,8 +57,8 @@ library Match {
             _tokenAddress1,
             _tokenAddress2
         );
-        uint256 reserveA = IDlrMatch(_matchAddress).reserveA();
-        uint256 reserveB = IDlrMatch(_matchAddress).reserveB();
+        uint128 reserveA = IDlrMatch(_matchAddress).reserveA();
+        uint128 reserveB = IDlrMatch(_matchAddress).reserveB();
         matchAddress = _matchAddress;
         (reserve1, reserve2) = _tokenAddress1 == tokenAddressA
             ? (reserveA, reserveB)

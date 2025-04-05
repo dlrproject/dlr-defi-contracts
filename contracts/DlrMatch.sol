@@ -51,12 +51,6 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         emit DlrMatchMint(_to, amountA.toUint128(), amountB.toUint128());
     }
 
-    function _mint(address _to, uint256 value) internal {
-        totalSupply = totalSupply.tryAdd(value);
-        balanceOf[_to] = balanceOf[_to].tryAdd(value);
-        emit Transfer(address(0), _to, value);
-    }
-
     function burn(
         address _to
     ) external nonReentrant returns (uint128 amountA, uint128 amountB) {
@@ -74,12 +68,6 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         balanceB = IERC20(tokenAddressB).balanceOf(address(this));
         _update(balanceA, balanceB);
         emit DlrMatchBurn(msg.sender, amountA, amountB, _to);
-    }
-
-    function _burn(address from, uint256 value) internal {
-        balanceOf[from] = balanceOf[from].trySub(value);
-        totalSupply = totalSupply.trySub(value);
-        emit Transfer(from, address(0), value);
     }
 
     function swap(
@@ -161,13 +149,6 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         );
     }
 
-    function _update(uint256 balanceA, uint256 balanceB) private {
-        reserveA = balanceA.toUint128();
-        reserveB = balanceB.toUint128();
-        kLast = uint256(((reserveA / 1000) * reserveB) / 1000);
-        emit DlrMatchSync(reserveA, reserveB);
-    }
-
     function skim(address _to) external nonReentrant {
         Global.useTransfer(
             tokenAddressA,
@@ -190,6 +171,27 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
             uint256(IERC20(tokenAddressA).balanceOf(address(this))),
             uint256(IERC20(tokenAddressB).balanceOf(address(this)))
         );
+    }
+
+    /* Private functions */
+
+    function _mint(address _to, uint256 value) internal {
+        totalSupply = totalSupply.tryAdd(value);
+        balanceOf[_to] = balanceOf[_to].tryAdd(value);
+        emit Transfer(address(0), _to, value);
+    }
+
+    function _burn(address from, uint256 value) internal {
+        balanceOf[from] = balanceOf[from].trySub(value);
+        totalSupply = totalSupply.trySub(value);
+        emit Transfer(from, address(0), value);
+    }
+
+    function _update(uint256 balanceA, uint256 balanceB) private {
+        reserveA = balanceA.toUint128();
+        reserveB = balanceB.toUint128();
+        kLast = uint256(((reserveA / 1000) * reserveB) / 1000);
+        emit DlrMatchSync(reserveA, reserveB);
     }
 
     /* Getter Setter */

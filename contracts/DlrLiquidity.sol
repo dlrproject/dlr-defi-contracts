@@ -8,6 +8,7 @@ import "./libraries/Match.sol";
 import "./libraries/Global.sol";
 
 contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
+    using Global for uint256;
     /* State Variables */
     address public factory;
 
@@ -29,21 +30,21 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         uint128 amountIn2,
         uint128 amountInMin1,
         uint128 amountInMin2
-    ) external returns (uint liquidity) {
+    ) external returns (uint128 liquidity) {
         (address tokenAddressA, address tokenAddressB) = Global.orderAddress(
             tokenAddressIn1,
             tokenAddressIn2
         );
 
-        (address matchAddress, uint128 reserveA, uint128 reserveB) = Match
+        (address matchAddress, uint256 reserveA, uint256 reserveB) = Match
             .getMatchReserves(factory, tokenAddressA, tokenAddressB);
 
         bool isA1 = tokenAddressIn1 == tokenAddressA;
         (
-            uint128 amountA,
-            uint128 amountB,
-            uint128 amountMinInA,
-            uint128 amountMinInB
+            uint256 amountA,
+            uint256 amountB,
+            uint256 amountMinInA,
+            uint256 amountMinInB
         ) = isA1
                 ? (amountIn1, amountIn2, amountInMin1, amountInMin2)
                 : (amountIn2, amountIn1, amountInMin2, amountInMin1);
@@ -56,7 +57,7 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
             if (amountA == 0) {
                 revert DlrLiquidity_AmountInZero();
             }
-            uint128 amountRealB = (amountA * reserveB) / reserveA;
+            uint256 amountRealB = (amountA.tryMul(reserveB)).tryDiv(reserveA);
             if (amountRealB <= amountB) {
                 if (amountRealB < amountMinInB) {
                     revert DlrLiquidity_RealAmountLessDesired();
@@ -66,7 +67,7 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
             if (amountB == 0) {
                 revert DlrLiquidity_AmountInZero();
             }
-            uint128 amountRealA = (amountB * reserveA) / reserveB;
+            uint256 amountRealA = (amountB.tryMul(reserveA)).tryDiv(reserveB);
             if (!(amountRealA <= amountA && amountRealA >= amountMinInA)) {
                 revert DlrLiquidity_RealAmountLessDesired();
             }
@@ -96,8 +97,8 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         emit DlrLiquidityInvestment(
             msg.sender,
             matchAddress,
-            amountA,
-            amountB,
+            amountA.toUint128(),
+            amountB.toUint128(),
             liquidity
         );
     }
@@ -152,26 +153,28 @@ contract DlrLiquidity is IDlrLiquidity, Initializable, OwnableUpgradeable {
         if (_amountIn == 0) {
             revert DlrLiquidity_AmountInZero();
         }
-        (address matchAddress, uint128 reserveIn, uint128 reserveOut) = Match
+        (address matchAddress, uint256 reserveIn, uint256 reserveOut) = Match
             .getMatchReserves(factory, _tokenAddressIn, _tokenAddressOut);
         if (reserveIn == 0 || reserveOut == 0) {
             revert Dlr_ReserveNotEnough();
         }
         /* Effects */
-        uint128 multiple = reserveOut * _amountIn;
-        uint128 reserveInAll = reserveIn + _amountIn;
-        amountOut = multiple / reserveInAll;
+        uint256 multiple = reserveOut.tryMul(_amountIn);
+        uint256 reserveInAll = reserveIn.tryAdd(_amountIn);
+        amountOut = multiple.tryDiv(reserveInAll).toUint128();
         if (amountOut < _amountOutMin) {
             revert DlrLiquidity_DesireAmountOutChanged();
         }
         /* Interactions */
         //approver
+        // Global.useApprove(_tokenAddressIn, msg.sender, matchAddress, _amountIn);
         Global.useTransferFrom(
             _tokenAddressIn,
             msg.sender,
             matchAddress,
             _amountIn
         );
+
         Match.useSwap(matchAddress, amountOut, _tokenAddressOut, msg.sender);
 
         emit DlrLiquiditySwapToken(

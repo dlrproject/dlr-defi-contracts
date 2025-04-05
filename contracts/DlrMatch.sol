@@ -4,12 +4,11 @@ pragma solidity ^0.8.22;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/dex/IDlrMatch.sol";
 import "./libraries/Global.sol";
 
 contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
-    using Math for uint;
+    using Global for uint256;
     /* State declarations */
     address public tokenAddressA;
     address public tokenAddressB;
@@ -27,41 +26,60 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
     }
 
     /* Main functions */
-    function mint(address _to) external nonReentrant returns (uint liquidity) {
-        uint balanceA = IERC20(tokenAddressA).balanceOf(address(this));
-        uint balanceB = IERC20(tokenAddressB).balanceOf(address(this));
-        uint128 amountA = uint128(balanceA - reserveA);
-        uint128 amountB = uint128(balanceB - reserveB);
-        uint _totalSupply = totalSupply;
+    function mint(
+        address _to
+    ) external nonReentrant returns (uint128 liquidity) {
+        uint256 balanceA = IERC20(tokenAddressA).balanceOf(address(this));
+        uint256 balanceB = IERC20(tokenAddressB).balanceOf(address(this));
+        uint256 amountA = balanceA.trySub(reserveA);
+        uint256 amountB = balanceB.trySub(reserveB);
+        uint256 _totalSupply = totalSupply;
         if (_totalSupply == 0) {
-            liquidity = Math.sqrt(amountA * amountB);
+            liquidity = Global.sqrt(amountA.tryMul(amountB)).toUint128();
         } else {
-            uint liquidityA = (amountA * _totalSupply) / reserveA;
-            uint liquidityB = (amountB * _totalSupply) / reserveB;
-            liquidity = liquidityA > liquidityB ? liquidityB : liquidityA;
+            uint256 liquidityA = (amountA.tryMul(_totalSupply)).tryDiv(
+                reserveA
+            );
+            uint256 liquidityB = (amountB.tryMul(_totalSupply)).tryDiv(
+                reserveB
+            );
+            liquidity = (liquidityA > liquidityB ? liquidityB : liquidityA)
+                .toUint128();
         }
         _mint(_to, liquidity);
-        _update(uint128(balanceA), uint128(balanceB));
-        emit DlrMatchMint(_to, amountA, amountB);
+        _update(balanceA, balanceB);
+        emit DlrMatchMint(_to, amountA.toUint128(), amountB.toUint128());
+    }
+
+    function _mint(address _to, uint256 value) internal {
+        totalSupply = totalSupply.tryAdd(value);
+        balanceOf[_to] = balanceOf[_to].tryAdd(value);
+        emit Transfer(address(0), _to, value);
     }
 
     function burn(
         address _to
     ) external nonReentrant returns (uint128 amountA, uint128 amountB) {
-        uint balanceA = IERC20(tokenAddressA).balanceOf(address(this));
-        uint balanceB = IERC20(tokenAddressB).balanceOf(address(this));
-        uint liquidity = balanceOf[address(this)];
+        uint256 balanceA = IERC20(tokenAddressA).balanceOf(address(this));
+        uint256 balanceB = IERC20(tokenAddressB).balanceOf(address(this));
+        uint256 liquidity = balanceOf[address(this)]; // 刚转的 10
 
-        amountA = uint128((liquidity * balanceA) / totalSupply); // using balances ensures pro-rata distribution
-        amountB = uint128((liquidity * balanceB) / totalSupply);
+        amountA = (liquidity.tryMul(balanceA)).tryDiv(totalSupply).toUint128(); // using balances ensures pro-rata distribution
+        amountB = (liquidity.tryMul(balanceB)).tryDiv(totalSupply).toUint128();
 
         _burn(address(this), liquidity);
         Global.useTransfer(tokenAddressA, _to, amountA);
         Global.useTransfer(tokenAddressB, _to, amountB);
         balanceA = IERC20(tokenAddressA).balanceOf(address(this));
         balanceB = IERC20(tokenAddressB).balanceOf(address(this));
-        _update(uint128(balanceA), uint128(balanceB));
+        _update(balanceA, balanceB);
         emit DlrMatchBurn(msg.sender, amountA, amountB, _to);
+    }
+
+    function _burn(address from, uint256 value) internal {
+        balanceOf[from] = balanceOf[from].trySub(value);
+        totalSupply = totalSupply.trySub(value);
+        emit Transfer(from, address(0), value);
     }
 
     function swap(
@@ -81,10 +99,10 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
         bool isAout = _tokenAddressOut == tokenAddressA;
         (
             address tokenAddressOut,
-            uint128 reserveOut,
+            uint256 reserveOut,
             address tokenAddressIn,
-            uint128 reserveIn,
-            uint128 amountOut
+            uint256 reserveIn,
+            uint256 amountOut
         ) = isAout
                 ? (tokenAddressA, reserveA, tokenAddressB, reserveB, _amountOut)
                 : (
@@ -99,93 +117,87 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
             revert Dlr_ReserveNotEnough();
         }
         Global.useTransfer(tokenAddressOut, _to, amountOut);
-        uint balanceIn = IERC20(tokenAddressIn).balanceOf(address(this));
-        uint balanceOut = IERC20(tokenAddressOut).balanceOf(address(this));
-        uint128 amountIn = balanceIn > reserveIn
-            ? uint128(balanceIn - reserveIn)
-            : uint128(0);
-        if ((balanceIn - amountIn) * balanceOut < reserveIn * reserveOut) {
+        uint256 balanceIn = IERC20(tokenAddressIn).balanceOf(address(this));
+        uint256 balanceOut = IERC20(tokenAddressOut).balanceOf(address(this));
+        uint256 amountIn = balanceIn > reserveIn
+            ? balanceIn.trySub(reserveIn)
+            : 0;
+        if (
+            (balanceIn.trySub(amountIn)).tryMul(balanceOut.tryAdd(amountOut)) <
+            reserveIn.tryMul(reserveOut)
+        ) {
             revert DlrLiquidity_KValueChangedLess();
         }
 
-        uint128 amountAIn;
-        uint128 amountBIn;
-        uint128 amountAOut;
-        uint128 amountBOut;
-        uint128 balanceA;
-        uint128 balanceB;
+        uint256 amountAIn;
+        uint256 amountBIn;
+        uint256 amountAOut;
+        uint256 amountBOut;
+        uint256 balanceA;
+        uint256 balanceB;
         if (isAout) {
-            balanceA = uint128(balanceOut);
-            balanceB = uint128(balanceIn);
-            amountAIn = uint128(0);
-            amountBOut = uint128(0);
+            balanceA = balanceOut;
+            balanceB = balanceIn;
+            amountAIn = 0;
+            amountBOut = 0;
             amountAOut = amountOut;
             amountBIn = amountIn;
         } else {
-            balanceA = uint128(balanceIn);
-            balanceB = uint128(balanceOut);
+            balanceA = balanceIn;
+            balanceB = balanceOut;
             amountAIn = amountIn;
             amountBOut = amountAOut;
-            amountAOut = uint128(0);
-            amountBIn = uint128(0);
+            amountAOut = 0;
+            amountBIn = 0;
         }
-
+        _update(balanceA, balanceB);
         emit DlrMatchSwap(
             msg.sender,
-            amountAIn,
-            amountBIn,
-            amountAOut,
-            amountBOut,
+            amountAIn.toUint128(),
+            amountBIn.toUint128(),
+            amountAOut.toUint128(),
+            amountBOut.toUint128(),
             _to
         );
+    }
+
+    function _update(uint256 balanceA, uint256 balanceB) private {
+        reserveA = balanceA.toUint128();
+        reserveB = balanceB.toUint128();
+        kLast = uint256(((reserveA / 1000) * reserveB) / 1000);
+        emit DlrMatchSync(reserveA, reserveB);
     }
 
     function skim(address _to) external nonReentrant {
         Global.useTransfer(
             tokenAddressA,
             _to,
-            uint128(IERC20(tokenAddressA).balanceOf(address(this)) - (reserveA))
+            uint256(
+                IERC20(tokenAddressA).balanceOf(address(this)).trySub(reserveA)
+            )
         );
         Global.useTransfer(
             tokenAddressB,
             _to,
-            uint128(IERC20(tokenAddressB).balanceOf(address(this)) - (reserveB))
+            uint256(
+                IERC20(tokenAddressB).balanceOf(address(this)).trySub(reserveB)
+            )
         );
     }
 
     function sync() external nonReentrant {
         _update(
-            uint128(IERC20(tokenAddressA).balanceOf(address(this))),
-            uint128(IERC20(tokenAddressB).balanceOf(address(this)))
+            uint256(IERC20(tokenAddressA).balanceOf(address(this))),
+            uint256(IERC20(tokenAddressB).balanceOf(address(this)))
         );
     }
 
-    /* Private functions */
-    function _burn(address from, uint value) internal {
-        balanceOf[from] = balanceOf[from] - value;
-        totalSupply = totalSupply - value;
-        emit Transfer(from, address(0), value);
-    }
-
-    function _mint(address _to, uint value) internal {
-        totalSupply = totalSupply + value;
-        balanceOf[_to] = balanceOf[_to] + value;
-        emit Transfer(address(0), _to, value);
-    }
-
-    function _update(uint128 balanceA, uint128 balanceB) private {
-        reserveA = balanceA;
-        reserveB = balanceB;
-        kLast = uint256(reserveA * reserveB);
-        emit DlrMatchSync(reserveA, reserveB);
-    }
-
     /* Getter Setter */
-    function getPriceA() public view returns (uint priceA) {
+    function getPriceA() public view returns (uint128 priceA) {
         priceA = (1000 * reserveB) / reserveA;
     }
 
-    function getPriceB() public view returns (uint priceB) {
+    function getPriceB() public view returns (uint128 priceB) {
         priceB = (1000 * reserveA) / reserveB;
     }
 
@@ -193,23 +205,24 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
     string public constant name = "DLR LP Token";
     string public constant symbol = "DLR";
     uint8 public constant decimals = 18;
-    uint public totalSupply;
-    mapping(address => uint) public balanceOf;
-    mapping(address => mapping(address => uint)) public allowance;
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
 
     constructor() Ownable(msg.sender) {}
 
     function approve(
         address spender,
-        uint value
+        uint256 value
     ) external override nonReentrant returns (bool) {
         allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
         return true;
     }
 
     function transfer(
         address to,
-        uint value
+        uint256 value
     ) external override nonReentrant returns (bool) {
         _transfer(msg.sender, to, value);
         return true;
@@ -218,16 +231,16 @@ contract DlrMatch is IDlrMatch, ReentrancyGuard, Ownable {
     function transferFrom(
         address from,
         address to,
-        uint value
+        uint256 value
     ) external override nonReentrant returns (bool) {
-        allowance[from][msg.sender] -= value;
+        allowance[from][msg.sender] = allowance[from][msg.sender].trySub(value);
         _transfer(from, to, value);
         return true;
     }
 
-    function _transfer(address from, address to, uint value) private {
-        balanceOf[from] -= value;
-        balanceOf[to] += value;
+    function _transfer(address from, address to, uint256 value) private {
+        balanceOf[from] = balanceOf[from].trySub(value);
+        balanceOf[to] = balanceOf[to].tryAdd(value);
         emit Transfer(from, to, value);
     }
 

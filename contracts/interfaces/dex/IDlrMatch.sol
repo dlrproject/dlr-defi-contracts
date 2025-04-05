@@ -14,11 +14,15 @@ interface IDlrMatch is IERC20 {
         address indexed _to
     );
 
-    event DlrMatchMint(address indexed _sender, uint _amountA, uint _amountB);
+    event DlrMatchMint(
+        address indexed _sender,
+        uint128 _amountA,
+        uint128 _amountB
+    );
     event DlrMatchBurn(
         address indexed _sender,
-        uint _amountA,
-        uint _amountB,
+        uint128 _amountA,
+        uint128 _amountB,
         address indexed _to
     );
     event DlrMatchSync(uint128 reserveA, uint128 reserveB);
@@ -30,7 +34,7 @@ interface IDlrMatch is IERC20 {
     ) external;
 
     /* Main functions */
-    function mint(address _to) external returns (uint liquidity);
+    function mint(address _to) external returns (uint128 liquidity);
 
     function burn(
         address _to
@@ -47,14 +51,15 @@ interface IDlrMatch is IERC20 {
     function sync() external;
 
     /* Gettter Setter */
+    function kLast() external view returns (uint256);
 
-    function reserveA() external view returns (uint128 priceA);
+    function reserveA() external view returns (uint128);
 
-    function reserveB() external view returns (uint128 priceB);
+    function reserveB() external view returns (uint128);
 
-    function getPriceA() external view returns (uint priceA);
+    function getPriceA() external view returns (uint128);
 
-    function getPriceB() external view returns (uint priceB);
+    function getPriceB() external view returns (uint128);
 
     function tokenAddressA() external view returns (address);
 
@@ -67,23 +72,23 @@ interface IDlrMatch is IERC20 {
 
     function decimals() external pure returns (uint8);
 
-    function totalSupply() external view returns (uint);
+    function totalSupply() external view returns (uint256);
 
-    function balanceOf(address owner) external view returns (uint);
+    function balanceOf(address owner) external view returns (uint256);
 
     function allowance(
         address owner,
         address spender
-    ) external view returns (uint);
+    ) external view returns (uint256);
 
-    function approve(address spender, uint value) external returns (bool);
+    function approve(address spender, uint256 value) external returns (bool);
 
-    function transfer(address to, uint value) external returns (bool);
+    function transfer(address to, uint256 value) external returns (bool);
 
     function transferFrom(
         address from,
         address to,
-        uint value
+        uint256 value
     ) external returns (bool);
     /************************ERC20************************/
 }

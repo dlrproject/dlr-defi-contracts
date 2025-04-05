@@ -60,7 +60,7 @@ contract DlrFactory is IDlrFactory, PausableUpgradeable, OwnableUpgradeable {
         }
 
         matchAddresses[tokenAddressA][tokenAddressB] = matchAddress;
-        matchAddresses[tokenAddressA][tokenAddressB] = matchAddress;
+        matchAddresses[tokenAddressB][tokenAddressA] = matchAddress;
         contractAddersses.push(matchAddress);
 
         /* Interactions */

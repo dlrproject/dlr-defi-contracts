@@ -27,7 +27,7 @@ library Match {
         bytes32 matchHash = IDlrFactory(_factory).getMatchHash();
         matchAddress = address(
             uint160(
-                uint(
+                uint256(
                     keccak256(
                         abi.encodePacked(
                             hex"ff",
@@ -57,8 +57,8 @@ library Match {
             _tokenAddress1,
             _tokenAddress2
         );
-        uint128 reserveA = IDlrMatch(_matchAddress).reserveA();
-        uint128 reserveB = IDlrMatch(_matchAddress).reserveB();
+        uint256 reserveA = IDlrMatch(_matchAddress).reserveA();
+        uint256 reserveB = IDlrMatch(_matchAddress).reserveB();
         matchAddress = _matchAddress;
         (reserve1, reserve2) = _tokenAddress1 == tokenAddressA
             ? (reserveA, reserveB)
@@ -77,7 +77,7 @@ library Match {
     function useMint(
         address _matchAddress,
         address _to
-    ) internal returns (uint liquidity) {
+    ) internal returns (uint128 liquidity) {
         liquidity = IDlrMatch(_matchAddress).mint(_to);
     }
 

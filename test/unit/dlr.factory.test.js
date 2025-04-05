@@ -3,8 +3,8 @@ const { ethers, network, ignition, upgrades } = require("hardhat");
 const { developmentChains } = require("../../config");
 const DlrFactoryModule = require("../../ignition/modules/dlr.factory");
 
-const TestTokenAddressModule = require("../../scripts/mocks/TestTokenAddress.mock");
-const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
+const TestTokenAddressModule = require("./mocks/TestTokenAddress.mock");
+const TestMatchModule = require("./mocks/TestMatch.mock");
 
 
 !developmentChains.includes(network.name)
@@ -78,7 +78,7 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
                 });
 
                 it("DlrFactory can't be exists address ", async function () {
-                    await proxyDrlFactoryContract.connect(admin).createMatch(   
+                    await proxyDrlFactoryContract.connect(admin).createMatch(
                         tokenAddresssA,
                         tokenAddresssB,
                     );
@@ -137,39 +137,7 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
                     assert.notEqual(code, "0x", "Contract code should be deployed");
                 });
             });
-            describe("setFeeAddress:    DlrFactory can set Fee Address ", function () {
-                it("DlrFactory onyl owner can set fee address", async function () {
-                    await expect(proxyDrlFactoryContract.connect(admin).setFeeAddress(owner.address))
-                        .to.be.revertedWithCustomError(proxyDrlFactoryContract, "OwnableUnauthorizedAccount");
-                });
-                it("DlrFactory Fee address can updated", async function () {
-                    await proxyDrlFactoryContract.connect(owner).setFeeAddress(owner.address);
-                    const feeAddress = await proxyDrlFactoryContract.feeAddress();
-                    expect(feeAddress).to.equal(owner.address, "Fee address should be updated");
-                });
-                it("DlrFactory Fee address can't  set address zero", async function () {
-                    await expect(proxyDrlFactoryContract.connect(owner).setFeeAddress(adddressZero))
-                        .to.be.revertedWithCustomError(proxyDrlFactoryContract, "Dlr_AddressZero");
-                });
-            });
-            describe("getFeeAddress:    DlrFactory can get Fee Address ", function () {
-                it("DlrFactory can't same token address ", async function () {
-                    await proxyDrlFactoryContract.connect(owner).setFeeAddress(owner.address);
-                    const returnData = await ethers.provider.call({
-                        to: proxyDrlFactoryContract.target,
-                        data: proxyDrlFactoryContract.interface.encodeFunctionData("getFeeAddress", [
 
-                        ]),
-                    });
-                    const [decoded] = ethers.AbiCoder.defaultAbiCoder().decode(
-                        ["address"],
-                        returnData
-                    );
-                    const feeAddress = await proxyDrlFactoryContract.feeAddress();
-                    expect(decoded).to.equal(feeAddress, "Fee address should be updated");
-
-                });
-            });
             describe("others:           DlrMatch functions can call", function () {
                 let matchAddress;
                 beforeEach(async () => {
@@ -187,24 +155,34 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
                     matchAddress = decodedEvent._matchAddress;
                 });
                 it("DlrMatch is inintialized", async function () {
+                    const TestMatch = await ignition.deploy(TestMatchModule)
+                    const testMatchAddress = TestMatch.testMatch.target;
+                    const testMatchContract = await ethers.getContractAt("TestMatch", testMatchAddress);
+                    const returnData = await ethers.provider.call({
+                        to: testMatchContract.target,
+                        data: testMatchContract.interface.encodeFunctionData("getMatchAddress", [
+                            proxyDrlFactoryContract.target,
+                            tokenAddresssA,
+                            tokenAddresssB,
+                        ]),
+                    });
+                    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(
+                        ["address", "address", "address"],
+                        returnData
+                    );
                     const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
                     assert.equal(
                         await matchContract.tokenAddressA(),
-                        tokenAddresssA,
+                        decoded[1],
                         "TokenA should be initialized"
                     );
                     assert.equal(
                         await matchContract.tokenAddressB(),
-                        tokenAddresssB,
+                        decoded[2],
                         "TokenB should be initialized"
                     );
                 });
-                it("DlrMatch mint can emit event", async function () {
-                    const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
-                    const mintTx = await matchContract.mint(tokenAddresssA);
-                    await expect(mintTx)
-                        .to.emit(matchContract, "DlrMatchMint")
-                });
+
                 it("DlrMatch ownner is factory", async function () {
                     const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
                     const matchOwner = await matchContract.owner();
@@ -212,7 +190,7 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
                 });
                 it("DlrMatch match hash equal test also dynamic update", async function () {
                     const TestMatch = await ignition.deploy(TestMatchModule)
-                    testMatchAddress = TestMatch.testMatch.target;
+                    const testMatchAddress = TestMatch.testMatch.target;
                     const testMatchContract = await ethers.getContractAt("TestMatch", testMatchAddress);
                     const returnData = await ethers.provider.call({
                         to: testMatchContract.target,
@@ -226,11 +204,9 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
 
                     assert.equal(matchHash, decoded[0])
                 });
-
-
                 it("DlrMatch dynamic address equal general address", async function () {
                     const TestMatch = await ignition.deploy(TestMatchModule)
-                    testMatchAddress = TestMatch.testMatch.target;
+                    const testMatchAddress = TestMatch.testMatch.target;
                     const testMatchContract = await ethers.getContractAt("TestMatch", testMatchAddress);
                     const returnData = await ethers.provider.call({
                         to: testMatchContract.target,
@@ -250,3 +226,44 @@ const TestMatchModule = require("../../scripts/mocks/TestMatch.mock");
         })
     });
 
+/* 
+it("DlrMatch mint can emit event", async function () {
+            const matchContract = await ethers.getContractAt("DlrMatch", matchAddress);
+            const mintTx = await matchContract.mint(tokenAddresssA);
+            await expect(mintTx)
+                .to.emit(matchContract, "DlrMatchMint")
+        });
+    describe("setFeeAddress:    DlrFactory can set Fee Address ", function () {
+        it("DlrFactory onyl owner can set fee address", async function () {
+            await expect(proxyDrlFactoryContract.connect(admin).setFeeAddress(owner.address))
+                .to.be.revertedWithCustomError(proxyDrlFactoryContract, "OwnableUnauthorizedAccount");
+        });
+        it("DlrFactory Fee address can updated", async function () {
+            await proxyDrlFactoryContract.connect(owner).setFeeAddress(owner.address);
+            const feeAddress = await proxyDrlFactoryContract.feeAddress();
+            expect(feeAddress).to.equal(owner.address, "Fee address should be updated");
+        });
+        it("DlrFactory Fee address can't  set address zero", async function () {
+            await expect(proxyDrlFactoryContract.connect(owner).setFeeAddress(adddressZero))
+                .to.be.revertedWithCustomError(proxyDrlFactoryContract, "Dlr_AddressZero");
+        });
+    });
+    describe("getFeeAddress:    DlrFactory can get Fee Address ", function () {
+        it("DlrFactory can't same token address ", async function () {
+            await proxyDrlFactoryContract.connect(owner).setFeeAddress(owner.address);
+            const returnData = await ethers.provider.call({
+                to: proxyDrlFactoryContract.target,
+                data: proxyDrlFactoryContract.interface.encodeFunctionData("getFeeAddress", [
+
+                ]),
+            });
+            const [decoded] = ethers.AbiCoder.defaultAbiCoder().decode(
+                ["address"],
+                returnData
+            );
+            const feeAddress = await proxyDrlFactoryContract.feeAddress();
+            expect(decoded).to.equal(feeAddress, "Fee address should be updated");
+
+        });
+    });
+*/

@@ -9,14 +9,14 @@ interface IDlrLiquidity {
         address indexed _matchAddress,
         uint128 _amountA,
         uint128 _amountB,
-        uint _liquidity
+        uint128 _liquidity
     );
     event DlrLiquidityProfit(
         address indexed _sender,
         address indexed _matchAddress,
         uint128 _amountA,
         uint128 _amountB,
-        uint _liquidity
+        uint128 _liquidity
     );
     event DlrLiquiditySwapToken(
         address indexed _sender,
@@ -39,7 +39,7 @@ interface IDlrLiquidity {
         uint128 _amountIn2,
         uint128 _amountInMin1,
         uint128 _amountInMin2
-    ) external returns (uint liquidity);
+    ) external returns (uint128 liquidity);
 
     function removeLiquidity(
         address _tokenAddressIn1,

@@ -7,7 +7,7 @@ interface IDlrFactory {
         address indexed _tokenAddressA,
         address indexed _tokenAddressB,
         address _matchAddress,
-        uint _timestamp
+        uint256 _timestamp
     );
 
     /* State Variables */
@@ -22,6 +22,6 @@ interface IDlrFactory {
         address _tokenAddress2
     ) external returns (address matchAddress);
 
-    /* Getter Setter */ 
+    /* Getter Setter */
     function getMatchHash() external view returns (bytes32);
 }

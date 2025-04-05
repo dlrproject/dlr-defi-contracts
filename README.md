@@ -18,6 +18,16 @@
         address _tokenAddressIn,      //    go接口1。 获取所有不同种类的代币 address
         address _tokenAddressOut    //    go接口2。 根据 上面代币address  获取match pool 中对应的代币地址
     ) external returns (uint128 amountOut);
+
+4。  提取流动性
+function removeLiquidity(
+        address _tokenAddressIn1,
+        address _tokenAddressIn2,
+        uint128 _liquidity,
+        uint128 _amountMin1,
+        uint128 _amountMin2
+    ) external returns (uint128 amount1, uint128 amount2);
+
 ```
 
 ### raffle 奖池
